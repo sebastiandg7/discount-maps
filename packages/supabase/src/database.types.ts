@@ -421,6 +421,13 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
+            foreignKeyName: 'redemptions_branch_id_fkey';
+            columns: ['branch_id'];
+            isOneToOne: false;
+            referencedRelation: 'branches_with_coords';
+            referencedColumns: ['id'];
+          },
+          {
             foreignKeyName: 'redemptions_business_id_fkey';
             columns: ['business_id'];
             isOneToOne: false;
@@ -548,6 +555,60 @@ export type Database = {
       };
     };
     Views: {
+      branches_with_coords: {
+        Row: {
+          address_line: string | null;
+          business_id: string | null;
+          city: string | null;
+          created_at: string | null;
+          google_place_id: string | null;
+          id: string | null;
+          lat: number | null;
+          lng: number | null;
+          name: string | null;
+          phone: string | null;
+        };
+        Insert: {
+          address_line?: string | null;
+          business_id?: string | null;
+          city?: string | null;
+          created_at?: string | null;
+          google_place_id?: string | null;
+          id?: string | null;
+          lat?: never;
+          lng?: never;
+          name?: string | null;
+          phone?: string | null;
+        };
+        Update: {
+          address_line?: string | null;
+          business_id?: string | null;
+          city?: string | null;
+          created_at?: string | null;
+          google_place_id?: string | null;
+          id?: string | null;
+          lat?: never;
+          lng?: never;
+          name?: string | null;
+          phone?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'branches_business_id_fkey';
+            columns: ['business_id'];
+            isOneToOne: false;
+            referencedRelation: 'businesses';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'branches_business_id_fkey';
+            columns: ['business_id'];
+            isOneToOne: false;
+            referencedRelation: 'businesses_public';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       businesses_public: {
         Row: {
           active_coupon_count: number | null;
@@ -562,6 +623,19 @@ export type Database = {
       };
     };
     Functions: {
+      add_branch: {
+        Args: {
+          p_address_line: string;
+          p_business_id: string;
+          p_city: string;
+          p_google_place_id?: string;
+          p_lat: number;
+          p_lng: number;
+          p_name: string;
+          p_phone?: string;
+        };
+        Returns: string;
+      };
       app_role: {
         Args: never;
         Returns: Database['public']['Enums']['user_role'];
@@ -575,6 +649,7 @@ export type Database = {
         Returns: number;
       };
       is_admin: { Args: never; Returns: boolean };
+      is_privileged: { Args: never; Returns: boolean };
       issue_coupon_token: { Args: { p_coupon_id: string }; Returns: string };
       nearby_businesses: {
         Args: {

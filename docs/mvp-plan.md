@@ -23,13 +23,13 @@
 - [x] 3. pgTAP RLS tests passing on the linked project (via `supabase db query --file`); `@org/domain` tests (50 passing); `db advisors` down to 5 intentional warnings
 - [x] 4. Verify: migrations pushed, pgTAP green on the linked project, live login as consumer on people-web, consumer bounced from business-web, anonymous bounced to login (replayed session cookie from Node)
 
-### Phase 2 — Business onboarding + admin verification — Not started (next)
+### Phase 2 — Business onboarding + admin verification — **Done 2026-09-21** (address autocomplete deferred to Phase 4, pending Google Maps key)
 
-- [ ] 1. `/onboarding` with logo upload and multi-branch autocomplete
-- [ ] 2. `/pendiente`; `/admin` approve/reject
-- [ ] 3. Verify
+- [x] 1. `/onboarding` with logo upload and multi-branch entry (address + city + lat/lng with "Usar mi ubicación"; Places autocomplete swaps in once the Maps key exists)
+- [x] 2. `/pendiente` (pending/rejected copy); `/admin` approve/reject with history; `(verified)` route group gates the merchant area
+- [x] 3. Verify: pgTAP `0003_branches` green; live run on the cloud project: owner onboarding with 2 branches → pending → admin approve → owner reaches /inicio
 
-### Phase 3 — Coupons CRUD + 3-active rule + live preview — Not started
+### Phase 3 — Coupons CRUD + 3-active rule + live preview — Not started (next)
 
 - [ ] 1. `@org/ui` `CouponCard`, `Toggle`, `TopBar`, `BottomNav`; business shell
 - [ ] 2. Coupon list with toggles; create/edit with live preview
@@ -706,4 +706,7 @@ Each phase ends with its verification; do not start the next until green. Comman
 | 2026-09-20 | User role is mirrored into JWT `app_metadata` by database triggers.                                                                                                                | Lets `proxy.ts` gate routes from claims without a database round-trip per request.                                                                      |
 | 2026-09-20 | pgTAP files run against the linked project with `supabase db query --file` (last result row + empty `finish()` = pass); CI runs `supabase test db` on a Docker-backed local stack. | `supabase test db --linked` still needs Docker, which the dev machine lacks.                                                                            |
 | 2026-09-20 | Explicit table grants + PUBLIC execute revoked in migrations 0002/0003.                                                                                                            | The cloud project did not apply Supabase's default data grants to `authenticated`/`service_role`; advisors flagged PUBLIC-executable trigger functions. |
+| 2026-09-21 | Admin-only triggers use `is_privileged()`: no JWT claims (direct SQL) or a service_role JWT bypass; `current_user` cannot be used inside SECURITY DEFINER. | Operators verifying from the dashboard SQL editor were silently blocked; `current_user` is the function owner in definer context. |
+| 2026-09-21 | Failed server-action submits echo `values` back into `defaultValue` props. | React 19 resets uncontrolled form fields after any action, wiping what the user typed on a validation error. |
+| 2026-09-21 | QA accounts `qa-owner@` / `qa-admin@discountmaps.test` (business "Pizzas del Norte", verified, 2 branches) stay on the cloud project as development fixtures; delete before launch. | Needed by Phases 3–5 for coupons, maps and QR testing. |
 | 2026-09-20 | Google Maps Platform with `@vis.gl/react-google-maps`.                                                                                                                             | Best POI/address data for Colombia; official React library.                                                                                             |

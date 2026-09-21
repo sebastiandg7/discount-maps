@@ -10,6 +10,9 @@ const nextConfig = {
     '@org/maps',
     '@org/billing-wompi',
   ],
+  experimental: {
+    serverActions: { bodySizeLimit: '4mb' },
+  },
   turbopack: {
     // Monorepo root; keeps Next from picking up a parent checkout's lockfile.
     root: path.join(__dirname, '../..'),

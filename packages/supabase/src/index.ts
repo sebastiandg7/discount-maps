@@ -4,6 +4,7 @@
 //   @org/supabase/proxy    → updateSession, PROXY_MATCHER (src/proxy.ts)
 export type { Database, Json } from './database.types';
 export { roleFromClaims, type UserRole } from './roles';
+export { publicStorageUrl } from './storage';
 
 import type { Database } from './database.types';
 

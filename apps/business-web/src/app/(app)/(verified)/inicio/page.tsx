@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Brand, Button, PageShell, buttonClassName } from '@org/ui';
-import { signOutAction } from '../../auth/actions';
+import { signOutAction } from '../../../auth/actions';
 
 const MENU = [
   {

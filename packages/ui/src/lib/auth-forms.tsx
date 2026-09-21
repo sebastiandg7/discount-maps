@@ -7,6 +7,8 @@ import { FormError, InputField } from './field';
 export interface AuthActionState {
   error?: string | null;
   fieldErrors?: Partial<Record<string, string>>;
+  /** Submitted values echoed back so uncontrolled inputs survive a failed action (React 19 resets forms). */
+  values?: Partial<Record<string, string>>;
 }
 
 export type AuthFormAction = (

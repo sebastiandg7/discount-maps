@@ -44,6 +44,20 @@ export const businessSignupSchema = z.object({
 });
 export type BusinessSignupInput = z.infer<typeof businessSignupSchema>;
 
+/** Company data collected at onboarding (no auth fields). */
+export const businessProfileSchema = z.object({
+  legalName: z.string().trim().min(2, 'Ingresa la razón social.').max(120),
+  displayName: z.string().trim().min(2, 'Ingresa el nombre comercial.').max(60),
+  nit: z
+    .string()
+    .trim()
+    .regex(/^\d{6,10}(-\d)?$/, 'Ingresa un NIT válido (ej. 900123456-7).'),
+  category: z.enum(CATEGORY_IDS, 'Selecciona una categoría.'),
+  description: optionalText(500),
+  phone: optionalText(20),
+});
+export type BusinessProfileInput = z.infer<typeof businessProfileSchema>;
+
 export const branchSchema = z.object({
   name: z.string().trim().min(2, 'Ingresa el nombre de la sede.').max(60),
   addressLine: z.string().trim().min(5, 'Ingresa la dirección.').max(160),
@@ -122,3 +136,20 @@ export function fieldErrorMap(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+export const MAX_BRANCHES = 20;
+
+export const onboardingSchema = businessProfileSchema.extend({
+  branches: z
+    .array(branchSchema)
+    .min(1, 'Agrega al menos una sede.')
+    .max(MAX_BRANCHES, `Máximo ${MAX_BRANCHES} sedes.`),
+});
+export type OnboardingInput = z.infer<typeof onboardingSchema>;
+
+export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+export const LOGO_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+] as const;

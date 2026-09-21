@@ -1,4 +1,9 @@
-import { businessSignupSchema, couponSchema } from './schemas';
+import {
+  businessProfileSchema,
+  businessSignupSchema,
+  couponSchema,
+  onboardingSchema,
+} from './schemas';
 
 describe('couponSchema', () => {
   const base = {
@@ -88,6 +93,50 @@ describe('businessSignupSchema', () => {
   it('rejects unknown categories', () => {
     expect(
       businessSignupSchema.safeParse({ ...base, category: 'gyms' }).success,
+    ).toBe(false);
+  });
+});
+
+describe('businessProfileSchema / onboardingSchema', () => {
+  const profile = {
+    legalName: 'Pizzas del Norte S.A.S.',
+    displayName: 'Pizzas del Norte',
+    nit: '900123456-7',
+    category: 'restaurants',
+    description: '',
+    phone: '',
+  };
+  const branch = {
+    name: 'Sede Chapinero',
+    addressLine: 'Cra 7 # 60-10',
+    city: 'Bogotá',
+    lat: 4.6486,
+    lng: -74.0628,
+    phone: '',
+  };
+
+  it('accepts a valid NIT with and without check digit', () => {
+    expect(businessProfileSchema.safeParse(profile).success).toBe(true);
+    expect(
+      businessProfileSchema.safeParse({ ...profile, nit: '900123456' }).success,
+    ).toBe(true);
+    expect(
+      businessProfileSchema.safeParse({ ...profile, nit: 'abc' }).success,
+    ).toBe(false);
+  });
+
+  it('requires at least one branch with coordinates in range', () => {
+    expect(
+      onboardingSchema.safeParse({ ...profile, branches: [] }).success,
+    ).toBe(false);
+    expect(
+      onboardingSchema.safeParse({ ...profile, branches: [branch] }).success,
+    ).toBe(true);
+    expect(
+      onboardingSchema.safeParse({
+        ...profile,
+        branches: [{ ...branch, lat: 95 }],
+      }).success,
     ).toBe(false);
   });
 });
