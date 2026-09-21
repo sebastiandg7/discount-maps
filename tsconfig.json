@@ -8,6 +8,21 @@
     },
     {
       "path": "./apps/people-web"
+    },
+    {
+      "path": "./packages/domain"
+    },
+    {
+      "path": "./packages/supabase"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/maps"
+    },
+    {
+      "path": "./packages/billing-wompi"
     }
   ],
   "compilerOptions": {}

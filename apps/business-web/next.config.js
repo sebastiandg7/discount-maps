@@ -1,9 +1,19 @@
 //@ts-check
+const path = require('node:path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Next.js options go here
-  // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+  transpilePackages: [
+    '@org/domain',
+    '@org/supabase',
+    '@org/ui',
+    '@org/maps',
+    '@org/billing-wompi',
+  ],
+  turbopack: {
+    // Monorepo root; keeps Next from picking up a parent checkout's lockfile.
+    root: path.join(__dirname, '../..'),
+  },
 };
 
 module.exports = nextConfig;

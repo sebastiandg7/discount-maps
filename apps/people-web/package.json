@@ -4,11 +4,20 @@
   "private": true,
   "nx": {
     "name": "people-web",
-    "sourceRoot": "apps/people-web/src"
+    "sourceRoot": "apps/people-web/src",
+    "tags": [
+      "type:app",
+      "scope:people"
+    ]
   },
   "dependencies": {
     "next": "~16.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "@org/domain": "workspace:*",
+    "@org/supabase": "workspace:*",
+    "@org/ui": "workspace:*",
+    "@org/maps": "workspace:*",
+    "@org/billing-wompi": "workspace:*"
   }
 }
