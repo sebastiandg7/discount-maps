@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "people-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["nx", "dev", "people-web", "--port", "3000"],
+      "port": 3000
+    },
+    {
+      "name": "business-web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["nx", "dev", "business-web", "--port", "3001"],
+      "port": 3001
+    }
+  ]
+}

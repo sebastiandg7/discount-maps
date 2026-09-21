@@ -3,5 +3,7 @@ packages:
   - 'apps/*'
 allowBuilds:
   '@parcel/watcher': true
+  '@swc/core': true
+  nx: true
   sharp: true
   unrs-resolver: true

@@ -1,23 +1,44 @@
-<!-- nx configuration start-->
-<!-- Leave the start & end comments to automatically receive updates. -->
+# Discount Maps — agent knowledge index
 
-# General Guidelines for working with Nx
+This file is a proxy, not a manual. It tells a coding agent which document to load for the task at hand so context stays small. Knowledge lives in `docs/`; keep this index short and keep the docs current in the same commit as the code they describe.
 
-- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
-- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
-- You have access to the Nx MCP server and its tools, use them to help the user
-- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
-- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
+## Start here, every session
 
-## Scaffolding & Generators
+1. [docs/mvp-plan.md](docs/mvp-plan.md) — the plan and the **progress checklist**. It is the source of truth for what exists, what is next and every decision taken (dated log at the bottom). Tick items and log decisions there in the same commit as the code.
+2. [docs/external-dependencies.md](docs/external-dependencies.md) — inputs only the owner can provide and what to do while they are missing.
 
-- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
+## Ground rules
 
-## When to use nx_docs
+- Run Nx with `NX_DAEMON=false` (the daemon hangs on this machine). No Docker, no Python here.
+- Database work targets the linked Supabase cloud project; never edit an applied migration, add a new one, push it, regenerate types, run the pgTAP runner and the advisors.
+- Business rules live twice: Postgres is the authority, `@org/domain` mirrors it for the UI and tests. Change both.
+- Secrets are pasted by the owner into gitignored `.env.local` files; agents never handle private keys or passwords.
+- UI copy is Spanish (es-CO); code is English. `CouponCard` is the only coupon rendering.
+- Before committing: format, then lint + typecheck + test + build must be green; verify features live when a browser check is possible.
+- Commit on the feature branch at phase boundaries with a summary of what was verified.
 
-- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
-- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
-- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
+## Load by task
 
-<!-- nx configuration end-->
+| When you are…                                                                                | Read                                                                                                          |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Running, generating or wiring anything with Nx / pnpm / TypeScript project references        | [docs/nx-guidelines.md](docs/nx-guidelines.md), [docs/workspace.md](docs/workspace.md)                        |
+| Writing a migration, policy, trigger, RPC or pgTAP test; touching Supabase config or types   | [docs/database.md](docs/database.md), [docs/product-rules.md](docs/product-rules.md)                          |
+| Working on login, sign-up, sessions, route gates, admin access, route groups                 | [docs/auth-and-roles.md](docs/auth-and-roles.md)                                                              |
+| Building pages, forms, components, styling, uploads, server actions                          | [docs/frontend-conventions.md](docs/frontend-conventions.md), [docs/product-rules.md](docs/product-rules.md)  |
+| Implementing or changing a business rule (coupons, subscriptions, QR, scoring, verification) | [docs/product-rules.md](docs/product-rules.md), [docs/mvp-plan.md § 3–4](docs/mvp-plan.md)                    |
+| Verifying a feature, driving the in-app browser, replaying sessions, running cloud tests     | [docs/verification-playbook.md](docs/verification-playbook.md)                                                |
+| Starting a new phase or unblocking work                                                      | [docs/mvp-plan.md § 6](docs/mvp-plan.md), [docs/external-dependencies.md](docs/external-dependencies.md)      |
+| Integrating Wompi, Google Maps, Web Push, PWA (future phases)                                | [docs/mvp-plan.md § 5](docs/mvp-plan.md) (verified API facts), then add a doc here when the integration lands |
+
+## Documents
+
+- [docs/mvp-plan.md](docs/mvp-plan.md) — architecture, schema, rules, roadmap, progress, decision log
+- [docs/workspace.md](docs/workspace.md) — layout, packages and tags, wiring rules, commands, machine constraints, env, styling, CI
+- [docs/nx-guidelines.md](docs/nx-guidelines.md) — tool-generated Nx guidance (skills, generators, nx_docs)
+- [docs/database.md](docs/database.md) — Supabase workflow, migration conventions, pgTAP, Vault, fixtures, gotchas
+- [docs/auth-and-roles.md](docs/auth-and-roles.md) — clients, role mirroring, proxy gates, route groups, auth flows
+- [docs/frontend-conventions.md](docs/frontend-conventions.md) — components, form patterns, Next 16 specifics, testing, tokens
+- [docs/product-rules.md](docs/product-rules.md) — every rule and where it is enforced
+- [docs/verification-playbook.md](docs/verification-playbook.md) — static, database and live verification recipes
+- [docs/external-dependencies.md](docs/external-dependencies.md) — owner-provided inputs and workarounds
+- [supabase/README.md](supabase/README.md) — CLI runbook for the cloud project and the (optional) local stack

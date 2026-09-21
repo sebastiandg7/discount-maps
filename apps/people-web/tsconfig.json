@@ -48,5 +48,22 @@
     "eslint.config.js",
     "eslint.config.cjs",
     "eslint.config.mjs"
+  ],
+  "references": [
+    {
+      "path": "../../packages/billing-wompi"
+    },
+    {
+      "path": "../../packages/maps"
+    },
+    {
+      "path": "../../packages/ui"
+    },
+    {
+      "path": "../../packages/supabase"
+    },
+    {
+      "path": "../../packages/domain"
+    }
   ]
 }

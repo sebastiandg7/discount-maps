@@ -4,11 +4,21 @@
   "private": true,
   "nx": {
     "name": "business-web",
-    "sourceRoot": "apps/business-web/src"
+    "sourceRoot": "apps/business-web/src",
+    "tags": [
+      "type:app",
+      "scope:business"
+    ]
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
+    "@org/domain": "workspace:*",
+    "@org/maps": "workspace:*",
+    "@org/supabase": "workspace:*",
+    "@org/ui": "workspace:*",
     "next": "~16.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.88.0"
   }
 }

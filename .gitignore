@@ -68,3 +68,11 @@ npm-debug.*
 web-build/
 cache/
 test-output
+# Environment
+.env
+.env.*
+!.env.example
+
+# Supabase local
+supabase/.temp
+supabase/.branches
