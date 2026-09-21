@@ -1,4 +1,4 @@
-import { billingWompi } from './billing-wompi.js';
+import { billingWompi } from './billing-wompi';
 
 describe('billingWompi', () => {
   it('should work', () => {

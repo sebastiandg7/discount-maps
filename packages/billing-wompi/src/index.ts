@@ -1,1 +1,1 @@
-export * from './lib/billing-wompi.js';
+export * from './lib/billing-wompi';

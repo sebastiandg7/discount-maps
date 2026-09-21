@@ -6,7 +6,10 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "types": ["node"],
+    "lib": ["es2022", "dom"],
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts"],
   "references": []

@@ -16,12 +16,12 @@
 - [x] 6. `.env.example` per app
 - [x] 7. Verify: lint/typecheck/test/build green; Tailwind renders
 
-### Phase 1 — Schema + auth + roles — Not started
+### Phase 1 — Schema + auth + roles — **In progress**
 
-- [ ] 1. `0001_init.sql`, `seed.sql`, generated types
-- [ ] 2. `@org/supabase` clients, `proxy.ts`, login / sign-up / callback, role gates
-- [ ] 3. pgTAP RLS tests; `@org/domain` entitlement tests
-- [ ] 4. Verify
+- [x] 1. `0001_init.sql`, `seed.sql` written; hand-authored types (regenerate after `supabase link`)
+- [x] 2. `@org/supabase` clients, `proxy.ts`, login / sign-up / callback, role gates (Google button wired; provider config pending in dashboard)
+- [x] 3. pgTAP RLS tests written (run after link); `@org/domain` tests (50 passing)
+- [ ] 4. Verify: `db:push` + `supabase test db --linked` + manual role bounce (blocked on `supabase link`)
 
 ### Phase 2 — Business onboarding + admin verification — Not started
 
@@ -695,11 +695,13 @@ Each phase ends with its verification; do not start the next until green. Comman
 
 ## Decision log
 
-| Date       | Decision                                                                                  | Reason                                                                                    |
-| ---------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 2026-09-20 | Web-first PWAs on the two existing Next.js apps; no Expo in MVP.                          | Fastest path to a usable build; camera, QR and push all work in the browser.              |
-| 2026-09-20 | Supabase without Edge Functions; server code in Next route handlers + Postgres functions. | Single runtime that can import workspace packages and be jest-tested.                     |
-| 2026-09-20 | Wompi for Colombia; card on file at sign-up, first charge on day 7.                       | Matches the free-trial spec; Wompi has no zero-amount verification.                       |
-| 2026-09-20 | Apple Sign-In deferred post-launch.                                                       | Requires Apple Developer account and 6-month secret rotation; not needed for first users. |
-| 2026-09-20 | Develop against the linked Supabase cloud project; local stack optional until Docker is installed. | Docker is not available on the dev machine; the user already created the cloud project. |
-| 2026-09-20 | Google Maps Platform with `@vis.gl/react-google-maps`.                                    | Best POI/address data for Colombia; official React library.                               |
+| Date       | Decision                                                                                           | Reason                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 2026-09-20 | Web-first PWAs on the two existing Next.js apps; no Expo in MVP.                                   | Fastest path to a usable build; camera, QR and push all work in the browser.              |
+| 2026-09-20 | Supabase without Edge Functions; server code in Next route handlers + Postgres functions.          | Single runtime that can import workspace packages and be jest-tested.                     |
+| 2026-09-20 | Wompi for Colombia; card on file at sign-up, first charge on day 7.                                | Matches the free-trial spec; Wompi has no zero-amount verification.                       |
+| 2026-09-20 | Apple Sign-In deferred post-launch.                                                                | Requires Apple Developer account and 6-month secret rotation; not needed for first users. |
+| 2026-09-20 | Develop against the linked Supabase cloud project; local stack optional until Docker is installed. | Docker is not available on the dev machine; the user already created the cloud project.   |
+| 2026-09-20 | Package-internal imports are extension-less with `moduleResolution: bundler` (not nodenext `.js` suffixes). | Turbopack does not map `.js` specifiers onto `.ts` sources in transpiled workspace packages. |
+| 2026-09-20 | User role is mirrored into JWT `app_metadata` by database triggers. | Lets `proxy.ts` gate routes from claims without a database round-trip per request. |
+| 2026-09-20 | Google Maps Platform with `@vis.gl/react-google-maps`.                                             | Best POI/address data for Colombia; official React library.                               |
