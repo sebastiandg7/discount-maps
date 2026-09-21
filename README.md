@@ -11,9 +11,9 @@ Subscription platform that connects consumers ("Persona") with local merchants (
 
 Both are mobile-first installable PWAs built with Next.js 16 on Supabase, Wompi (Colombia) and Google Maps. Shared code lives in `packages/*` as `@org/*` workspace packages.
 
-## Plan and progress
+## Plan, progress and knowledge base
 
-The full architecture, database schema, business rules and phased roadmap live in [docs/mvp-plan.md](docs/mvp-plan.md). The checklist at the top of that file is the source of truth for implementation progress.
+The full architecture, database schema, business rules and phased roadmap live in [docs/mvp-plan.md](docs/mvp-plan.md). The checklist at the top of that file is the source of truth for implementation progress. Working conventions and workflows are indexed by task in [AGENTS.md](AGENTS.md).
 
 ## Common commands
 

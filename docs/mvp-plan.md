@@ -2,6 +2,7 @@
 
 > Living document. Every completed step is ticked in the same commit as the code that completes it.
 > Decisions that change during implementation go in the [Decision log](#decision-log) at the bottom.
+> Working knowledge (conventions, workflows, gotchas) lives in the sibling docs indexed by [AGENTS.md](../AGENTS.md).
 
 ## Progress
 
@@ -35,13 +36,13 @@
 - [x] 2. `/cupones` list with toggles + ≥3 banner; `/cupones/nuevo` and `/cupones/[id]` with react-hook-form + `useWatch` live preview, image upload, delete
 - [x] 3. Verify: pgTAP `0004_coupons_min_active` (8 assertions) green; live: 4 coupons created through the editor, one deactivated, remaining switches lock at 3, `businesses_public` lists the business with 3 live coupons
 
-### Phase 4 — Consumer maps + business profile — Not started (next; needs Google Maps key + Map ID)
+### Phase 4 — Consumer maps + business profile — Blocked on Google Maps key + Map ID (see [external-dependencies.md](external-dependencies.md)); non-map parts can start anytime
 
 - [ ] 1. `@org/maps`; `/mapas`; `/negocios/[id]`
 - [ ] 2. pgTAP `nearby_businesses.sql`
 - [ ] 3. Verify
 
-### Phase 5 — QR + scanner — Not started
+### Phase 5 — QR + scanner — Not started (recommended next: no external inputs needed)
 
 - [ ] 1. Coupon detail with rotating QR
 - [ ] 2. `/verificar` scanner
@@ -709,4 +710,5 @@ Each phase ends with its verification; do not start the next until green. Comman
 | 2026-09-21 | Admin-only triggers use `is_privileged()`: no JWT claims (direct SQL) or a service_role JWT bypass; `current_user` cannot be used inside SECURITY DEFINER.                          | Operators verifying from the dashboard SQL editor were silently blocked; `current_user` is the function owner in definer context.                       |
 | 2026-09-21 | Failed server-action submits echo `values` back into `defaultValue` props.                                                                                                          | React 19 resets uncontrolled form fields after any action, wiping what the user typed on a validation error.                                            |
 | 2026-09-21 | QA accounts `qa-owner@` / `qa-admin@discountmaps.test` (business "Pizzas del Norte", verified, 2 branches) stay on the cloud project as development fixtures; delete before launch. | Needed by Phases 3–5 for coupons, maps and QR testing.                                                                                                  |
+| 2026-09-21 | Knowledge base split into `docs/*.md` indexed by `AGENTS.md`; `CLAUDE.md` is a pointer.                                                                                             | Lets agents load only the context a task needs; the tool-generated Nx block moved to `docs/nx-guidelines.md`.                                           |
 | 2026-09-20 | Google Maps Platform with `@vis.gl/react-google-maps`.                                                                                                                              | Best POI/address data for Colombia; official React library.                                                                                             |
