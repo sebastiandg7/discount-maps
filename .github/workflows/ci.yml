@@ -31,3 +31,15 @@ jobs:
       - run: pnpm nx format:check --base="remotes/origin/main"
       - run: pnpm nx sync:check
       - run: pnpm nx affected -t lint test typecheck build --base="remotes/origin/main"
+
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor
+      - run: supabase test db
+      - run: supabase stop
+        if: always()
