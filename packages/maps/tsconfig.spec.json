@@ -5,7 +5,8 @@
     "jsx": "react-jsx",
     "types": ["jest", "node"],
     "module": "esnext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "lib": ["es2022", "dom", "dom.iterable"]
   },
   "include": [
     "jest.config.ts",

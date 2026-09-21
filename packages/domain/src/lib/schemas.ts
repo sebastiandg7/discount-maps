@@ -71,7 +71,11 @@ export type BranchInput = z.infer<typeof branchSchema>;
 
 export const DISCOUNT_TYPES = ['percentage', 'fixed', 'bogo', 'other'] as const;
 
-const isoDate = z.iso.datetime({ offset: true }).or(z.literal(''));
+/** Accepts a full timestamp (with offset) or a plain YYYY-MM-DD from <input type="date">. */
+const isoDate = z.iso
+  .datetime({ offset: true })
+  .or(z.iso.date())
+  .or(z.literal(''));
 
 export const couponSchema = z
   .object({
