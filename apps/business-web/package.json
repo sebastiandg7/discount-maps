@@ -1,0 +1,14 @@
+{
+  "name": "@org/business-web",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "business-web",
+    "sourceRoot": "apps/business-web/src"
+  },
+  "dependencies": {
+    "next": "~16.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
