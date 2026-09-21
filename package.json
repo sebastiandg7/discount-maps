@@ -2,6 +2,8 @@
   "name": "@org/source",
   "version": "0.0.0",
   "license": "MIT",
+  "private": true,
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
     "db:start": "supabase start",
     "db:stop": "supabase stop",
@@ -11,7 +13,6 @@
     "db:types:linked": "supabase gen types typescript --linked > packages/supabase/src/database.types.ts",
     "db:test": "supabase test db"
   },
-  "private": true,
   "devDependencies": {
     "@babel/core": "^7.14.5",
     "@babel/preset-react": "^7.14.5",

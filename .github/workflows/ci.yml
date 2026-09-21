@@ -28,18 +28,28 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm nx format:check --base="remotes/origin/main"
+      # Sets NX_BASE / NX_HEAD for both pull requests and pushes to main.
+      - uses: nrwl/nx-set-shas@v4
+
+      - run: pnpm nx format:check
       - run: pnpm nx sync:check
-      - run: pnpm nx affected -t lint test typecheck build --base="remotes/origin/main"
+      - run: pnpm nx affected -t lint test typecheck build
+        env:
+          NX_DAEMON: 'false'
 
   database:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest
-      - run: supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor
+
+      # Only what pgTAP needs: postgres (+ gotrue for the auth schema). Skips the heavy optional services.
+      - run: supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,postgres-meta
+
       - run: supabase test db
+
       - run: supabase stop
         if: always()

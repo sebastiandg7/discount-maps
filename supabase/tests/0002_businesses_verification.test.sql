@@ -1,5 +1,6 @@
 -- pgTAP: businesses RLS and the admin-only verification gate.
 begin;
+create extension if not exists pgtap with schema extensions;
 select plan(9);
 
 create or replace function pg_temp.create_user(p_id uuid, p_email text, p_role text default null)
@@ -40,7 +41,7 @@ select lives_ok($$ update public.businesses set description = 'La mejor pizza' w
 
 -- as a consumer
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000011","role":"authenticated"}';
-select is((select count(*) from public.businesses)::int, 0, 'consumers cannot see pending businesses');
+select is((select count(*) from public.businesses where id = '00000000-0000-4000-8000-0000000000b1')::int, 0, 'consumers cannot see pending businesses');
 select throws_ok(
   $$ insert into public.businesses (owner_id, legal_name, display_name, nit, category)
      values ('00000000-0000-4000-8000-000000000011', 'X', 'X', '123456', 'retail') $$,
@@ -48,7 +49,7 @@ select throws_ok(
 
 -- as the admin
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000013","role":"authenticated"}';
-select is((select count(*) from public.businesses)::int, 1, 'admin sees pending businesses');
+select is((select count(*) from public.businesses where id = '00000000-0000-4000-8000-0000000000b1')::int, 1, 'admin sees pending businesses');
 select lives_ok(
   $$ update public.businesses
         set verification_status = 'verified', verified_at = now(), verified_by = '00000000-0000-4000-8000-000000000013'
@@ -59,7 +60,7 @@ select is((select verification_status::text from public.businesses where id = '0
 
 -- consumer again: verified business is now visible
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000011","role":"authenticated"}';
-select is((select count(*) from public.businesses)::int, 1, 'consumers see verified businesses');
+select is((select count(*) from public.businesses where id = '00000000-0000-4000-8000-0000000000b1')::int, 1, 'consumers see verified businesses');
 
 select * from finish();
 rollback;

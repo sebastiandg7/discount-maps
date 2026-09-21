@@ -1,5 +1,6 @@
 -- pgTAP: profiles, roles and the auth.users trigger.
 begin;
+create extension if not exists pgtap with schema extensions;
 select plan(9);
 
 -- helper: create an auth user the way GoTrue would; the trigger creates the profile.
@@ -32,7 +33,8 @@ select is((select raw_app_meta_data->>'role' from auth.users where id = '0000000
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000001","role":"authenticated"}';
 
-select is((select count(*) from public.profiles)::int, 1, 'a user only sees their own profile');
+select is((select count(*) from public.profiles where id in ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003'))::int,
+          1, 'a user only sees their own profile');
 select lives_ok($$ update public.profiles set full_name = 'Nuevo Nombre' where id = '00000000-0000-4000-8000-000000000001' $$,
                 'a user can update their own name');
 select throws_ok($$ update public.profiles set role = 'admin' where id = '00000000-0000-4000-8000-000000000001' $$,
@@ -46,7 +48,8 @@ select is((select raw_app_meta_data->>'role' from auth.users where id = '0000000
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000003","role":"authenticated"}';
-select is((select count(*) from public.profiles)::int, 3, 'an admin sees every profile');
+select is((select count(*) from public.profiles where id in ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000003'))::int,
+          3, 'an admin sees every profile');
 
 select * from finish();
 rollback;

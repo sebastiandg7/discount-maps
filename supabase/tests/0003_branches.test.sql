@@ -1,5 +1,6 @@
 -- pgTAP: branches RLS, add_branch RPC and the coordinates view.
 begin;
+create extension if not exists pgtap with schema extensions;
 select plan(7);
 
 create or replace function pg_temp.create_user(p_id uuid, p_email text, p_role text default null)
@@ -42,7 +43,7 @@ select throws_ok(
 
 -- consumers cannot see branches of a pending business
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000021","role":"authenticated"}';
-select is((select count(*) from public.branches_with_coords)::int, 0, 'consumers do not see branches of pending businesses');
+select is((select count(*) from public.branches_with_coords where business_id = '00000000-0000-4000-8000-0000000000b2')::int, 0, 'consumers do not see branches of pending businesses');
 
 -- verify the business as the database owner; consumer now sees the branch
 reset role;
@@ -50,7 +51,7 @@ set local request.jwt.claims to default;
 update public.businesses set verification_status = 'verified' where id = '00000000-0000-4000-8000-0000000000b2';
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000021","role":"authenticated"}';
-select is((select count(*) from public.branches_with_coords)::int, 1, 'consumers see branches of verified businesses');
+select is((select count(*) from public.branches_with_coords where business_id = '00000000-0000-4000-8000-0000000000b2')::int, 1, 'consumers see branches of verified businesses');
 
 select * from finish();
 rollback;

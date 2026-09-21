@@ -62,4 +62,4 @@ Tailwind v4 via `@tailwindcss/postcss`. Tokens are defined once in `packages/ui/
 
 ## CI
 
-`.github/workflows/ci.yml`: pnpm install, `nx format:check`, `nx sync:check`, `nx affected -t lint test typecheck build`, plus a `database` job that starts a local Supabase stack (Docker is available on the runner) and runs `supabase test db`.
+`.github/workflows/ci.yml`: `pnpm/action-setup` (version from `packageManager` in `package.json`), `nrwl/nx-set-shas` (correct `NX_BASE`/`NX_HEAD` for PRs and pushes), `nx format:check`, `nx sync:check`, `nx affected -t lint test typecheck build`, plus a `database` job that starts a local Supabase stack (Docker is available on the runner) and runs `supabase test db`.

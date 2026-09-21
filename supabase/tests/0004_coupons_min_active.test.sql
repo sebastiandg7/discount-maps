@@ -1,5 +1,6 @@
 -- pgTAP: the minimum-3-live-coupons rule for verified businesses.
 begin;
+create extension if not exists pgtap with schema extensions;
 select plan(8);
 
 create or replace function pg_temp.create_user(p_id uuid, p_email text, p_role text default null)
@@ -35,7 +36,7 @@ update public.coupons set is_active = true where id = '00000000-0000-4000-8000-0
 
 -- not on the map while pending
 set local request.jwt.claims = '{"sub":"00000000-0000-4000-8000-000000000031","role":"authenticated"}';
-select is((select count(*) from public.businesses_public)::int, 0, 'pending business is not public');
+select is((select count(*) from public.businesses_public where id = '00000000-0000-4000-8000-0000000000b3')::int, 0, 'pending business is not public');
 
 -- verify as direct SQL (privileged)
 reset role;

@@ -48,6 +48,7 @@ Conventions every new migration must follow:
 - Impersonate: `set local role authenticated; set local request.jwt.claims = '{"sub":"<uuid>","role":"authenticated"}';`
 - Back to privileged: `reset role; set local request.jwt.claims to default;` (claims persist across `reset role`, so clear them or admin gates stay enforced).
 - Expect RLS write violations with `throws_ok($$...$$, '42501', null, 'msg')`, trigger errors with `throws_ok($$...$$, 'P0001', 'MIN_ACTIVE_COUPONS', 'msg')`.
+- **Scope every count to rows the test created** (`where id in (...)`): suites run against the shared cloud project, which holds QA fixtures. Start each file with `create extension if not exists pgtap with schema extensions;` so CI's fresh local stack has it.
 - Suites: `0001` profiles/roles, `0002` business verification, `0003` branches, `0004` coupons minimum. Add one per feature.
 
 ## Secrets in Vault
