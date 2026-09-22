@@ -5,7 +5,7 @@ import { consumerSignupSchema, fieldErrorMap, loginSchema } from '@org/domain';
 import { createServerSupabase } from '@org/supabase/server';
 import type { AuthActionState } from '@org/ui';
 
-const HOME = '/inicio';
+const HOME = '/mapas';
 
 function appUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';

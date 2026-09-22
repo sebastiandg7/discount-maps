@@ -16,6 +16,7 @@
     "@org/maps": "workspace:*",
     "@org/supabase": "workspace:*",
     "@org/ui": "workspace:*",
+    "@yudiel/react-qr-scanner": "^2.6.0",
     "next": "~16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

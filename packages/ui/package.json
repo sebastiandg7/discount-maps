@@ -23,6 +23,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
-    "@org/domain": "workspace:*"
+    "@org/domain": "workspace:*",
+    "qrcode.react": "^4.2.0"
   }
 }

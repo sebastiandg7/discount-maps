@@ -7,11 +7,18 @@
 
 ## Components (`@org/ui`)
 
-`Button` / `buttonClassName` (variants primary, secondary, ghost, danger; use `buttonClassName` on `next/link`), `InputField`, `TextareaField`, `SelectField`, `FormError`, `PageShell`, `TopBar` (left back link, title, right slot), `BackIcon`, `Brand`, `EmptyState`, `Toggle` (role=switch), `LoginForm`, `SignupForm`, `CouponCard`.
+`Button` / `buttonClassName` (variants primary, secondary, ghost, danger; use `buttonClassName` on `next/link`), `InputField`, `TextareaField`, `SelectField`, `FormError`, `PageShell`, `TopBar` (left back link, title, right slot), `BackIcon`, `Brand`, `EmptyState`, `Toggle` (role=switch), `LoginForm`, `SignupForm`, `CouponCard`, `BottomNav` (+ `MapIcon`, `ChatIcon`, `UserIcon`, `QrIcon`), `CategoryChips`, `QrCode` (wraps `qrcode.react`).
 
 - **`CouponCard` is the single coupon rendering.** The merchant editor renders it with `preview` and the consumer app renders the same component; never fork it.
 - `@org/ui` may import `@org/domain` but nothing from Next (`next/link`, `next/image`); pass `href`s and let apps wrap with `Link` where needed. Use plain `<img>` for user uploads (no Next lint rule applies inside the package).
+- `BottomNav` takes `currentPath` and a `LinkComponent`; apps pass `usePathname()` and `next/link` from a small `'use client'` wrapper (`apps/people-web/src/app/(app)/(tabs)/bottom-nav.tsx`). Pages under a tab shell add `pb-20` to `PageShell` so the bar never covers content.
 - Add a `'use client'` directive only to components that use hooks or handlers.
+
+`@org/maps`: `useGeolocation` (one-shot, Bogotá fallback, `isFallback` + `locate()` for the "Usar mi ubicación" chip), `googleMapsDirectionsUrl` / `wazeUrl`, and `BusinessMap`, a placeholder until the Maps key exists. Read `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in a **server** component and pass it as `apiKey` (env inlining is not guaranteed inside transpiled packages).
+
+## Browser-only libraries
+
+The QR scanner (`@yudiel/react-qr-scanner`) touches `navigator` at render time: load it from a client component with `next/dynamic(() => import(...).then(m => m.Scanner), { ssr: false })`. Camera and geolocation need a secure context (`localhost` or HTTPS); handle the `permission-denied` / `no-camera` error kinds with a manual fallback (see `/verificar`). Its ZXing WASM fallback (browsers without `BarcodeDetector`) is fetched from a CDN at runtime.
 
 ## Forms
 
@@ -21,6 +28,8 @@ Two patterns, pick by complexity:
 2. **Rich forms** (coupon editor): `react-hook-form` + `zodResolver(schema from @org/domain)` with `mode: 'onChange'`; `useWatch({ control })` feeds live previews; on submit build a `FormData` and call the server action inside `useTransition`. Numbers use `setValueAs: v => v === '' ? null : Number(v)`.
 
 Server actions: validate again with the same zod schema, use `fieldErrorMap(error)` for per-field messages, write with the user-session client so RLS applies, `revalidatePath` then `redirect`. Map database errors to Spanish (`friendlyDbError` pattern; the `MIN_ACTIVE_COUPONS` trigger hint is already Spanish).
+
+**Browser-driven reads** (nearby list, QR token issue/verify) are also server actions, returning a discriminated union such as `{ rows } | { error }`; the client calls them inside `useTransition` and keeps the result in local state. Both apps have a `server-only` `getSession()` memoized with React `cache()` (`src/lib/session.ts` in people-web, `src/lib/business.ts` in business-web). Guard route params with `isUuid` before they reach a uuid column.
 
 File uploads go through the server action (`serverActions.bodySizeLimit: '4mb'` in `next.config.js`); validate type/size against `LOGO_MIME_TYPES` / `LOGO_MAX_BYTES`; storage paths are `<business_id>/<file>` so the owner-folder storage policy applies.
 

@@ -49,7 +49,9 @@ Conventions every new migration must follow:
 - Back to privileged: `reset role; set local request.jwt.claims to default;` (claims persist across `reset role`, so clear them or admin gates stay enforced).
 - Expect RLS write violations with `throws_ok($$...$$, '42501', null, 'msg')`, trigger errors with `throws_ok($$...$$, 'P0001', 'MIN_ACTIVE_COUPONS', 'msg')`.
 - **Scope every count to rows the test created** (`where id in (...)`): suites run against the shared cloud project, which holds QA fixtures. Start each file with `create extension if not exists pgtap with schema extensions;` so CI's fresh local stack has it.
-- Suites: `0001` profiles/roles, `0002` business verification, `0003` branches, `0004` coupons minimum. Add one per feature.
+- Suites: `0001` profiles/roles, `0002` business verification, `0003` branches, `0004` coupons minimum, `0005` nearby businesses (view + RPC: radius, category, sort), `0006` QR tokens (issue/verify, replay, tamper, expiry, lapsed coupon/subscription). Add one per feature.
+- Values a later assertion needs (e.g. an issued token) go into a temp table created while privileged with `grant all on <t> to public`, so impersonated roles can read and write it. `now()` is frozen inside the transaction: forge expired tokens by computing the HMAC with the Vault secret instead of waiting.
+- From an unlinked git worktree run the runner with `SUPABASE_PROJECT_REF=<ref>` (it appends `--project-ref`).
 
 ## Secrets in Vault
 
@@ -57,7 +59,7 @@ Postgres functions read secrets from `vault.decrypted_secrets` by name: `qr_toke
 
 ## Fixtures on the cloud project
 
-QA accounts (password `QaPassw0rd!`): `qa-owner@discountmaps.test` (business owner of "Pizzas del Norte", verified, 2 branches in Bogotá, 4 coupons of which 3 live) and `qa-admin@discountmaps.test` (admin). Create consumers on demand with the same `auth.users` + `auth.identities` insert pattern (see `supabase/tests/*.test.sql`). **Delete all `@discountmaps.test` users before launch.**
+QA accounts (password `QaPassw0rd!`): `qa-owner@discountmaps.test` (business owner of "Pizzas del Norte", verified, 2 branches in Bogotá, 4 coupons of which 3 live), `qa-admin@discountmaps.test` (admin) and `qa-consumer@discountmaps.test` (id `00000000-0000-4000-8000-00000000c001`, `subscriptions` row `trialing` until 2026-10-22; extend `trial_ends_at` by SQL when it lapses). Create more consumers with the same `auth.users` + `auth.identities` insert pattern (see `supabase/tests/*.test.sql`); subscriptions are inserted by SQL until Wompi lands. The Vault secret `qr_token_secret` exists on the cloud project (random value created in SQL). **Delete all `@discountmaps.test` users and their redemptions before launch.**
 
 ## Gotchas
 

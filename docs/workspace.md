@@ -11,7 +11,7 @@ Nx 23 · pnpm 11 · TypeScript project references ("TS solution" setup) · Next.
 | `packages/domain`          | Pure business rules, zod schemas, es-CO labels. No IO. Mirrors SQL logic.                              | `type:domain`, `scope:shared` |
 | `packages/supabase`        | Typed clients (`./browser`, `./server`, `./proxy`), generated `Database` types, role + storage helpers | `type:data`, `scope:shared`   |
 | `packages/ui`              | Shared React components + `theme.css` design tokens                                                    | `type:ui`, `scope:shared`     |
-| `packages/maps`            | Google Maps wrappers (empty until Phase 4)                                                             | `type:ui`, `scope:shared`     |
+| `packages/maps`            | Geolocation hook, navigation deep links, `BusinessMap` (placeholder until the Maps key exists)         | `type:ui`, `scope:shared`     |
 | `packages/billing-wompi`   | Server-only Wompi client (empty until Phase 6)                                                         | `type:server`, `scope:people` |
 | `supabase/`                | Migrations, pgTAP tests, local config                                                                  |                               |
 | `scripts/pgtap-remote.mjs` | Runs pgTAP suites against the linked cloud project without Docker                                      |                               |
@@ -41,7 +41,9 @@ NX_DAEMON=false pnpm nx dev people-web --port 3000
 NX_DAEMON=false pnpm nx dev business-web --port 3001
 ```
 
-Database scripts (root `package.json`): `db:push`, `db:types:linked`, `db:test` (needs Docker), and `node scripts/pgtap-remote.mjs [file]` for cloud pgTAP. See [database.md](database.md).
+Database scripts (root `package.json`): `db:push`, `db:types:linked`, `db:test` (needs Docker), and `node scripts/pgtap-remote.mjs [file]` for cloud pgTAP (set `SUPABASE_PROJECT_REF` in an unlinked worktree). See [database.md](database.md).
+
+Git worktrees (`.claude/worktrees/*`) share `node_modules` resolution rules but not the Supabase link nor `.env.local`; recreate the env files from `.env.example` with the public URL and publishable key (`pnpm supabase projects api-keys --project-ref <ref>`).
 
 Dev servers for the in-app browser are declared in `.claude/launch.json` (`people-web`, `business-web`).
 

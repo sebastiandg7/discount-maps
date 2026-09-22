@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === '/' || AUTH_PATHS.has(pathname)) {
-    return redirectTo('/inicio');
+    return redirectTo('/mapas');
   }
 
   return response;

@@ -6,6 +6,9 @@
  * `select is(...)` / `lives_ok(...)` / `throws_ok(...)` statement is rewritten to
  * insert its TAP line into a temp table, which is selected right before the final
  * rollback. Usage: node scripts/pgtap-remote.mjs [supabase/tests/*.test.sql]
+ *
+ * Set SUPABASE_PROJECT_REF when the checkout is not linked (e.g. a git worktree):
+ * the CLI then receives --project-ref in addition to --linked.
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync, writeFileSync, mkdtempSync } from 'node:fs';
@@ -78,6 +81,9 @@ for (const file of files) {
         '--file',
         tmp,
         '--linked',
+        ...(process.env.SUPABASE_PROJECT_REF
+          ? ['--project-ref', process.env.SUPABASE_PROJECT_REF]
+          : []),
         '--output-format',
         'json',
       ],

@@ -35,7 +35,14 @@ business-web route groups under `src/app/(app)/`:
 - `(verified)/layout.tsx`: admin → `/admin`; no business → `/onboarding`; not verified → `/pendiente`. Everything a merchant does day to day (`inicio`, `cupones`, later `verificar`, `cuenta`) lives here.
 - `admin/`: `notFound()` unless role is admin.
 
-people-web today: `(auth)/login`, `(auth)/registro`, `auth/callback`, `(app)/inicio`. The subscription gate (`/suscripcion/tarjeta` when no `subscriptions` row) arrives in Phase 6.
+people-web route groups under `src/app/(app)/`:
+
+- `layout.tsx`: session required (defense in depth).
+- `(tabs)/`: the shell with `BottomNav` — `mapas/`, `contacto/` (placeholder), `cuenta/` (placeholder + sign-out). Pages use `pb-20`.
+- `negocios/[id]/` and `negocios/[id]/cupones/[couponId]/`: full-screen pages with a back link, outside the tab shell.
+- `inicio/`: redirects to `/mapas` (the business app and older callbacks still point here). Post-login `HOME` is `/mapas`.
+
+The subscription gate (`/suscripcion/tarjeta` when no `subscriptions` row) arrives in Phase 6; until then the coupon detail shows an inline "Tu suscripción no está activa" card when `issue_coupon_token` raises `SUBSCRIPTION_INACTIVE`.
 
 ## Auth flows
 
