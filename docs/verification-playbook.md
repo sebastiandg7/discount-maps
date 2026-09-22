@@ -13,6 +13,16 @@ NX_DAEMON=false CI=true pnpm nx run-many -t lint typecheck test build
 
 Warnings currently tolerated: "Unused eslint-disable directive" in generated jest configs, `no-non-null-assertion` in a few page files that rely on layout guarantees.
 
+## Command guard (agent hook)
+
+`scripts/agent-guard.mjs` runs before every Bash / PowerShell call (see `.claude/settings.json`) and blocks the actions reserved for the owner. It matches the whole command text, so a heredoc or `perl -pi` string that merely **mentions** `gh pr merge` or `git push -f` is blocked too: write docs that quote those commands with the Edit/Write tools. Self-test after changing a rule:
+
+```sh
+node scripts/agent-guard.mjs < /dev/null            # no input → allowed (exit 0)
+```
+
+and pipe a JSON `{"tool_input":{"command":"…"}}` per case; exit code 2 means blocked. Expected blocks: force push, `reset --hard`, `checkout -- .`, bare `stash`, `pr merge`, `db reset`, `DROP`/`TRUNCATE`, `DELETE` without `WHERE`, `vault.create_secret('value'…)`, `rm -rf` of `apps/`, `packages/`, `docs/`, `supabase/migrations`. Expected allows: normal push, `checkout -- <file>`, `stash push -m`, `db push`, `DELETE … WHERE`, `rm -rf apps/*/.next`.
+
 ## Database
 
 ```sh

@@ -14,5 +14,18 @@
     "network": {
       "allowedDomains": ["www.google-analytics.com"]
     }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/agent-guard.mjs"
+          }
+        ]
+      }
+    ]
   }
 }

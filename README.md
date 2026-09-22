@@ -15,6 +15,10 @@ Both are mobile-first installable PWAs built with Next.js 16 on Supabase, Wompi 
 
 The full architecture, database schema, business rules and phased roadmap live in [docs/mvp-plan.md](docs/mvp-plan.md). The checklist at the top of that file is the source of truth for implementation progress. Working conventions and workflows are indexed by task in [AGENTS.md](AGENTS.md).
 
+## Working with the AI (no coding required)
+
+The repo is set up so a non-technical owner can keep iterating through Claude Code. Read [docs/owner-guide.md](docs/owner-guide.md) (Spanish) for how to ask, review, approve and undo changes. Agents follow [docs/agent-protocol.md](docs/agent-protocol.md) and the task catalogue in [docs/recipes.md](docs/recipes.md); slash commands `/owner-request`, `/ship`, `/verify`, `/status` and `/undo` live in `.claude/skills/`, and `scripts/agent-guard.mjs` blocks destructive commands.
+
 ## Common commands
 
 ```sh
