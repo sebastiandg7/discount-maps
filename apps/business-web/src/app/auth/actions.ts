@@ -2,13 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { consumerSignupSchema, fieldErrorMap, loginSchema } from '@org/domain';
-import { createServerSupabase } from '@org/supabase/server';
+import { createServerSupabase, requestOrigin } from '@org/supabase/server';
 import type { AuthActionState } from '@org/ui';
 
 const HOME = '/inicio';
 
-function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+function appUrl(): Promise<string> {
+  return requestOrigin('http://localhost:3001');
 }
 
 function safeNext(value: FormDataEntryValue | null): string {
@@ -60,7 +60,7 @@ export async function signupAction(
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.fullName, role: 'business' },
-      emailRedirectTo: `${appUrl()}/auth/callback?next=/onboarding`,
+      emailRedirectTo: `${await appUrl()}/auth/callback?next=/onboarding`,
     },
   });
   if (error) {
