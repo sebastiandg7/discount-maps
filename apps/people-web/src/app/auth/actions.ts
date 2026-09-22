@@ -2,13 +2,13 @@
 
 import { redirect } from 'next/navigation';
 import { consumerSignupSchema, fieldErrorMap, loginSchema } from '@org/domain';
-import { createServerSupabase } from '@org/supabase/server';
+import { createServerSupabase, requestOrigin } from '@org/supabase/server';
 import type { AuthActionState } from '@org/ui';
 
 const HOME = '/mapas';
 
-function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+function appUrl(): Promise<string> {
+  return requestOrigin('http://localhost:3000');
 }
 
 /** Only allow same-app relative paths as post-login destinations. */
@@ -57,7 +57,7 @@ export async function signupAction(
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.fullName, role: 'consumer' },
-      emailRedirectTo: `${appUrl()}/auth/callback?next=${HOME}`,
+      emailRedirectTo: `${await appUrl()}/auth/callback?next=${HOME}`,
     },
   });
   if (error) {
@@ -78,7 +78,7 @@ export async function googleAction(): Promise<void> {
   const supabase = await createServerSupabase();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: `${appUrl()}/auth/callback?next=${HOME}` },
+    options: { redirectTo: `${await appUrl()}/auth/callback?next=${HOME}` },
   });
   if (error || !data.url) {
     redirect('/login?error=google');

@@ -5,6 +5,7 @@
 - Supabase Auth with `@supabase/ssr` cookies. Email/password everywhere; Google OAuth on people-web only (button exists, provider must be configured in the Supabase dashboard). Apple deferred post-launch.
 - Roles: `consumer` | `business` | `admin`, stored in `public.profiles.role` **and** mirrored into the JWT `app_metadata.role` by database triggers. `business` is requested by passing `options.data.role = 'business'` to `signUp` (business-web only); everything else becomes `consumer`; `admin` only via SQL.
 - Read the role with `roleFromClaims(claims)` from `@org/supabase`.
+- Confirmation-email and OAuth links (`emailRedirectTo` / `redirectTo`) use `requestOrigin()` from `@org/supabase/server`: the host the user is actually on (localhost, a Vercel preview, production), not an env var. Supabase only honours that URL if it matches **Auth → URL Configuration → Redirect URLs** in the dashboard; otherwise it silently sends the **Site URL** (which is how a Vercel sign-up once got a `localhost:3000` link). Every deployed hostname needs an entry there (e.g. `https://<app>.vercel.app/**`, or a wildcard for previews).
 
 ## Clients (`@org/supabase`)
 
