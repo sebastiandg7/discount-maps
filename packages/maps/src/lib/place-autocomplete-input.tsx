@@ -145,8 +145,10 @@ function AutocompleteField({
         componentText(place.addressComponents, 'locality') ||
         componentText(place.addressComponents, 'administrative_area_level_2') ||
         componentText(place.addressComponents, 'administrative_area_level_1');
-      const formatted = place.formattedAddress ?? s.main;
-      const addressLine = stripLocality(formatted, city) || s.main;
+      // Prefer the suggestion text the merchant picked: formattedAddress
+      // abbreviates ("Ak 7 #60-10" for "Avenida Carrera 7 #60-10").
+      const addressLine =
+        s.main || stripLocality(place.formattedAddress ?? '', city);
       const lat = place.location?.lat();
       const lng = place.location?.lng();
       skipNext.current = true;
