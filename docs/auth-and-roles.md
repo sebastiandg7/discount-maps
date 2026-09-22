@@ -25,7 +25,7 @@ Per-request helpers in business-web: `getSession()` and `getOwnBusiness()` in `s
 - people-web: `role === 'business'` → `NEXT_PUBLIC_BUSINESS_APP_URL/inicio`
 - business-web: `role === 'consumer'` → `NEXT_PUBLIC_PEOPLE_APP_URL/inicio`; admins are allowed
 - signed in on `/`, `/login`, `/registro` → `/inicio`
-- `/auth/*` and `/api/*` are skipped (callback, sign-out, webhooks, and a handy place to load a page without redirects)
+- `/auth/*` and `/api/*` are skipped (callback, sign-out, webhooks, and a handy place to load a page without redirects); `/sin-conexion` is public in both apps so the service worker can pre-cache it
 
 business-web route groups under `src/app/(app)/`:
 

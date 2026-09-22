@@ -11,9 +11,13 @@ export const metadata: Metadata = {
     title: 'Discount Maps',
     statusBarStyle: 'default',
   },
+  applicationName: 'Discount Maps',
   icons: {
-    icon: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon-180.png',
   },
 };
 

@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { updateSession } from '@org/supabase/proxy';
 
-const PUBLIC_PATHS = new Set(['/', '/login', '/registro']);
+const PUBLIC_PATHS = new Set(['/', '/login', '/registro', '/sin-conexion']);
 const AUTH_PATHS = new Set(['/login', '/registro']);
 
 export async function proxy(request: NextRequest) {

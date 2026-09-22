@@ -1,20 +1,20 @@
 import type { MetadataRoute } from 'next';
 
-/** Installable manifest. Icons come from scripts/generate-icons.mjs (swap for the brand assets). */
+/** Installable manifest for the merchant app (icons from scripts/generate-icons.mjs). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'Discount Maps',
-    short_name: 'Discount Maps',
-    description: 'Descuentos exclusivos en los negocios cerca de ti.',
+    name: 'Discount Maps Empresas',
+    short_name: 'DM Empresas',
+    description: 'Publica cupones y verifica clientes de Discount Maps.',
     lang: 'es-CO',
-    start_url: '/mapas',
+    start_url: '/inicio',
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
     background_color: '#ffffff',
-    theme_color: '#e11d48',
-    categories: ['shopping', 'food', 'lifestyle'],
+    theme_color: '#1f2937',
+    categories: ['business', 'productivity'],
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -28,15 +28,15 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: 'Mapas',
-        short_name: 'Mapas',
-        url: '/mapas',
+        name: 'Verificar cliente',
+        short_name: 'Verificar',
+        url: '/verificar',
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
       },
       {
-        name: 'Mi cuenta',
-        short_name: 'Cuenta',
-        url: '/cuenta',
+        name: 'Cupones',
+        short_name: 'Cupones',
+        url: '/cupones',
         icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
       },
     ],
