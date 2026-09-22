@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { updateSession } from '@org/supabase/proxy';
 
 /** Routes reachable without a session. */
-const PUBLIC_PATHS = new Set(['/', '/login', '/registro']);
+const PUBLIC_PATHS = new Set(['/', '/login', '/registro', '/sin-conexion']);
 /** Routes a signed-in user should not see again. */
 const AUTH_PATHS = new Set(['/login', '/registro']);
 
@@ -28,7 +28,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname === '/' || AUTH_PATHS.has(pathname)) {
-    return redirectTo('/inicio');
+    return redirectTo('/mapas');
   }
 
   return response;

@@ -5,8 +5,10 @@ import type {
   TextareaHTMLAttributes,
 } from 'react';
 
-const control =
+/** Class list of the text controls, also for inputs rendered by other packages (`PlaceAutocompleteInput`). */
+export const fieldControlClassName =
   'w-full rounded-card border border-line bg-surface px-4 py-3 text-base text-ink placeholder:text-ink-muted focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100 aria-[invalid=true]:border-danger';
+const control = fieldControlClassName;
 
 interface FieldShellProps {
   id: string;

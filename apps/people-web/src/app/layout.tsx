@@ -1,8 +1,24 @@
+import type { Metadata } from 'next';
 import './global.css';
+import { RegisterServiceWorker } from './register-sw';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Discount Maps',
   description: 'Descuentos exclusivos en los negocios cerca de ti.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Discount Maps',
+    statusBarStyle: 'default',
+  },
+  applicationName: 'Discount Maps',
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon-180.png',
+  },
 };
 
 export const viewport = {
@@ -19,7 +35,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es-CO">
-      <body>{children}</body>
+      <body>
+        {children}
+        <RegisterServiceWorker />
+      </body>
     </html>
   );
 }

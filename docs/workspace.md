@@ -4,18 +4,19 @@ Nx 23 · pnpm 11 · TypeScript project references ("TS solution" setup) · Next.
 
 ## Layout
 
-| Path                       | What it is                                                                                             | Tags                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| `apps/people-web`          | Consumer PWA (port 3000)                                                                               | `type:app`, `scope:people`    |
-| `apps/business-web`        | Merchant + admin PWA (port 3001)                                                                       | `type:app`, `scope:business`  |
-| `packages/domain`          | Pure business rules, zod schemas, es-CO labels. No IO. Mirrors SQL logic.                              | `type:domain`, `scope:shared` |
-| `packages/supabase`        | Typed clients (`./browser`, `./server`, `./proxy`), generated `Database` types, role + storage helpers | `type:data`, `scope:shared`   |
-| `packages/ui`              | Shared React components + `theme.css` design tokens                                                    | `type:ui`, `scope:shared`     |
-| `packages/maps`            | Google Maps wrappers (empty until Phase 4)                                                             | `type:ui`, `scope:shared`     |
-| `packages/billing-wompi`   | Server-only Wompi client (empty until Phase 6)                                                         | `type:server`, `scope:people` |
-| `supabase/`                | Migrations, pgTAP tests, local config                                                                  |                               |
-| `scripts/pgtap-remote.mjs` | Runs pgTAP suites against the linked cloud project without Docker                                      |                               |
-| `docs/`                    | This knowledge base; `mvp-plan.md` is the plan + progress source of truth                              |                               |
+| Path                         | What it is                                                                                                    | Tags                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `apps/people-web`            | Consumer PWA (port 3000)                                                                                      | `type:app`, `scope:people`    |
+| `apps/business-web`          | Merchant + admin PWA (port 3001)                                                                              | `type:app`, `scope:business`  |
+| `packages/domain`            | Pure business rules, zod schemas, es-CO labels. No IO. Mirrors SQL logic.                                     | `type:domain`, `scope:shared` |
+| `packages/supabase`          | Typed clients (`./browser`, `./server`, `./proxy`), generated `Database` types, role + storage helpers        | `type:data`, `scope:shared`   |
+| `packages/ui`                | Shared React components + `theme.css` design tokens                                                           | `type:ui`, `scope:shared`     |
+| `packages/maps`              | Google Maps components (`BusinessMap`, `PlaceAutocompleteInput`), geolocation hook, navigation deep links     | `type:ui`, `scope:shared`     |
+| `packages/billing-wompi`     | Server-only Wompi client, integrity signature, webhook checksum (`import 'server-only'` in its index)         | `type:server`, `scope:people` |
+| `supabase/`                  | Migrations, pgTAP tests, local config                                                                         |                               |
+| `scripts/pgtap-remote.mjs`   | Runs pgTAP suites against the linked cloud project without Docker                                             |                               |
+| `scripts/generate-icons.mjs` | Writes both apps' PWA icons (`public/icons/`) from an inline SVG with `sharp`; re-run after changing the mark |                               |
+| `docs/`                      | This knowledge base; `mvp-plan.md` is the plan + progress source of truth                                     |                               |
 
 Module boundaries are enforced by `@nx/enforce-module-boundaries` in `eslint.config.mjs`: `domain` depends on nothing; `data`/`ui` may depend on `domain`; `server` on `domain`+`data`; apps on everything. `scope:business` must never import `@org/billing-wompi` (lint error by design).
 
@@ -41,7 +42,9 @@ NX_DAEMON=false pnpm nx dev people-web --port 3000
 NX_DAEMON=false pnpm nx dev business-web --port 3001
 ```
 
-Database scripts (root `package.json`): `db:push`, `db:types:linked`, `db:test` (needs Docker), and `node scripts/pgtap-remote.mjs [file]` for cloud pgTAP. See [database.md](database.md).
+Database scripts (root `package.json`): `db:push`, `db:types:linked`, `db:test` (needs Docker), and `node scripts/pgtap-remote.mjs [file]` for cloud pgTAP (set `SUPABASE_PROJECT_REF` in an unlinked worktree). See [database.md](database.md).
+
+Git worktrees (`.claude/worktrees/*`) share `node_modules` resolution rules but not the Supabase link nor `.env.local`; recreate the env files from `.env.example` with the public URL and publishable key (`pnpm supabase projects api-keys --project-ref <ref>`).
 
 Dev servers for the in-app browser are declared in `.claude/launch.json` (`people-web`, `business-web`).
 

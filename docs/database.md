@@ -22,13 +22,16 @@ Regenerate `packages/supabase/src/database.types.ts` after every schema change (
 
 Files: `supabase/migrations/<timestamp>_<name>.sql`, forward-only (never edit an applied one; add a new file). Applied so far:
 
-| File                                             | Purpose                                                                                                                                             |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001_init`                                      | Enums, tables, triggers, view `businesses_public`, RPCs `nearby_businesses`, `issue_coupon_token`, `verify_coupon_token`, RLS, storage buckets      |
-| `0002_grants`                                    | Explicit table/function grants; `anon` gets nothing; default privileges for future objects                                                          |
-| `0003_hardening`                                 | Pinned `search_path`, PUBLIC execute revoked, policies rewritten with `(select auth.uid())`, one SELECT policy per table, write-only owner policies |
-| `0004_branches`                                  | `add_branch(...)` RPC (builds the PostGIS point), `branches_with_coords` view                                                                       |
-| `0005_privileged_bypass` + `0006_privileged_fix` | `is_privileged()`; admin-only triggers let direct SQL and service_role through                                                                      |
+| File                                             | Purpose                                                                                                                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001_init`                                      | Enums, tables, triggers, view `businesses_public`, RPCs `nearby_businesses`, `issue_coupon_token`, `verify_coupon_token`, RLS, storage buckets                         |
+| `0002_grants`                                    | Explicit table/function grants; `anon` gets nothing; default privileges for future objects                                                                             |
+| `0003_hardening`                                 | Pinned `search_path`, PUBLIC execute revoked, policies rewritten with `(select auth.uid())`, one SELECT policy per table, write-only owner policies                    |
+| `0004_branches`                                  | `add_branch(...)` RPC (builds the PostGIS point), `branches_with_coords` view                                                                                          |
+| `0005_privileged_bypass` + `0006_privileged_fix` | `is_privileged()`; admin-only triggers let direct SQL and service_role through                                                                                         |
+| `0007_billing_cron`                              | `pg_cron` job `billing-run-hourly` → `net.http_post` to `<people_web_url>/api/billing/run` with `x-billing-secret`; no-op until both Vault secrets exist               |
+| `0008_push_hooks`                                | `notify_new_coupon()` AFTER INSERT on `coupons` → `net.http_post` to `<people_web_url>/api/push/new-coupon` with `x-push-secret`; no-op until both Vault secrets exist |
+| `0009_branches_min`                              | `enforce_min_branches()` BEFORE DELETE on `branches`: the last branch of a business cannot be deleted (`MIN_BRANCHES`, Spanish hint); `is_privileged()` bypass         |
 
 Conventions every new migration must follow:
 
@@ -49,15 +52,17 @@ Conventions every new migration must follow:
 - Back to privileged: `reset role; set local request.jwt.claims to default;` (claims persist across `reset role`, so clear them or admin gates stay enforced).
 - Expect RLS write violations with `throws_ok($$...$$, '42501', null, 'msg')`, trigger errors with `throws_ok($$...$$, 'P0001', 'MIN_ACTIVE_COUPONS', 'msg')`.
 - **Scope every count to rows the test created** (`where id in (...)`): suites run against the shared cloud project, which holds QA fixtures. Start each file with `create extension if not exists pgtap with schema extensions;` so CI's fresh local stack has it.
-- Suites: `0001` profiles/roles, `0002` business verification, `0003` branches, `0004` coupons minimum. Add one per feature.
+- Suites: `0001` profiles/roles, `0002` business verification, `0003` branches, `0004` coupons minimum, `0005` nearby businesses (view + RPC: radius, category, sort), `0006` QR tokens (issue/verify, replay, tamper, expiry, lapsed coupon/subscription), `0007` account (subscription RLS, profile self-edit, cancel keeps access until period/trial end, business self-edit, branch minimum). Add one per feature.
+- Values a later assertion needs (e.g. an issued token) go into a temp table created while privileged with `grant all on <t> to public`, so impersonated roles can read and write it. `now()` is frozen inside the transaction: forge expired tokens by computing the HMAC with the Vault secret instead of waiting.
+- From an unlinked git worktree run the runner with `SUPABASE_PROJECT_REF=<ref>` (it appends `--project-ref`).
 
 ## Secrets in Vault
 
-Postgres functions read secrets from `vault.decrypted_secrets` by name: `qr_token_secret`, `people_web_url`, `billing_cron_secret`, `push_dispatch_secret`. `supabase/seed.sql` creates local values; on the cloud project create them once in the SQL editor (see `supabase/README.md`). `billing_cron_secret` / `push_dispatch_secret` must equal the people-web env values.
+Postgres functions read secrets from `vault.decrypted_secrets` by name: `qr_token_secret` (exists on the cloud project), `people_web_url`, `billing_cron_secret`, `push_dispatch_secret` (still missing: they need the public people-web URL). `supabase/seed.sql` creates local values; on the cloud project create them once in the SQL editor (see `supabase/README.md`). `billing_cron_secret` / `push_dispatch_secret` must equal the people-web env values. Check what the cron job is doing with `select * from cron.job_run_details order by start_time desc limit 5`.
 
 ## Fixtures on the cloud project
 
-QA accounts (password `QaPassw0rd!`): `qa-owner@discountmaps.test` (business owner of "Pizzas del Norte", verified, 2 branches in Bogotá, 4 coupons of which 3 live) and `qa-admin@discountmaps.test` (admin). Create consumers on demand with the same `auth.users` + `auth.identities` insert pattern (see `supabase/tests/*.test.sql`). **Delete all `@discountmaps.test` users before launch.**
+QA accounts (password `QaPassw0rd!`): `qa-owner@discountmaps.test` (business owner of "Pizzas del Norte", verified, 2 branches in Bogotá, 4 coupons of which 3 live), `qa-admin@discountmaps.test` (admin), `qa-consumer@discountmaps.test` (id `…c001`, `subscriptions` row `trialing` until 2026-10-22, card 4242 since the Phase 8 cancel → reactivate check; extend `trial_ends_at` by SQL when it lapses), `qa-consumer2@` (`…c002`, Wompi sandbox source for card 4242, `active` after the Phase 6 run) and `qa-consumer3@` (`…c003`, `canceled` after three declines on 4111, then reactivated with card 4242 in Phase 8: `active`, period end 2026-10-22). Create more consumers with the same `auth.users` + `auth.identities` insert pattern (see `supabase/tests/*.test.sql`); subscriptions are inserted by SQL until Wompi lands. The Vault secret `qr_token_secret` exists on the cloud project (random value created in SQL). **Delete all `@discountmaps.test` users and their redemptions before launch.**
 
 ## Gotchas
 

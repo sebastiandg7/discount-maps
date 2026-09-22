@@ -17,9 +17,11 @@
     "@org/maps": "workspace:*",
     "@org/supabase": "workspace:*",
     "@org/ui": "workspace:*",
+    "jose": "^6.2.12",
     "next": "~16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-hook-form": "^7.88.0"
+    "react-hook-form": "^7.88.0",
+    "web-push": "^3.6.7"
   }
 }

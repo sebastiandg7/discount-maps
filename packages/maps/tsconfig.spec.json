@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./out-tsc/jest",
     "jsx": "react-jsx",
-    "types": ["jest", "node"],
+    "types": ["jest", "node", "google.maps"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "lib": ["es2022", "dom", "dom.iterable"]

@@ -142,6 +142,9 @@ export function fieldErrorMap(error: z.ZodError): Record<string, string> {
 }
 
 export const MAX_BRANCHES = 20;
+/** A business keeps at least one branch (SQL trigger `branches_min_one` raises this code). */
+export const MIN_BRANCHES = 1;
+export const MIN_BRANCHES_ERROR = 'MIN_BRANCHES';
 
 export const onboardingSchema = businessProfileSchema.extend({
   branches: z
@@ -157,3 +160,14 @@ export const LOGO_MIME_TYPES = [
   'image/jpeg',
   'image/webp',
 ] as const;
+
+export const passwordChangeSchema = z
+  .object({
+    password,
+    confirm: z.string(),
+  })
+  .refine((v) => v.password === v.confirm, {
+    path: ['confirm'],
+    message: 'Las contraseñas no coinciden.',
+  });
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;

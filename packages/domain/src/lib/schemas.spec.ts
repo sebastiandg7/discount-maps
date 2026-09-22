@@ -3,6 +3,7 @@ import {
   businessSignupSchema,
   couponSchema,
   onboardingSchema,
+  passwordChangeSchema,
 } from './schemas';
 
 describe('couponSchema', () => {
@@ -138,5 +139,27 @@ describe('businessProfileSchema / onboardingSchema', () => {
         branches: [{ ...branch, lat: 95 }],
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('passwordChangeSchema', () => {
+  it('requires 8+ characters and a matching confirmation', () => {
+    expect(
+      passwordChangeSchema.safeParse({
+        password: 'secreto123',
+        confirm: 'secreto123',
+      }).success,
+    ).toBe(true);
+    const short = passwordChangeSchema.safeParse({
+      password: 'corta',
+      confirm: 'corta',
+    });
+    expect(short.success).toBe(false);
+    const mismatch = passwordChangeSchema.safeParse({
+      password: 'secreto123',
+      confirm: 'secreto124',
+    });
+    expect(mismatch.success).toBe(false);
+    expect(mismatch.error?.issues[0].path).toEqual(['confirm']);
   });
 });

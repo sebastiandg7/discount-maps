@@ -2,12 +2,15 @@
 
 import { useActionState, useState } from 'react';
 import { CATEGORIES, DEFAULT_MAP_CENTER, MAX_BRANCHES } from '@org/domain';
+import { PlaceAutocompleteInput } from '@org/maps';
 import {
   Button,
+  FieldShell,
   FormError,
   InputField,
   SelectField,
   TextareaField,
+  fieldControlClassName,
   type AuthActionState,
   type AuthFormAction,
 } from '@org/ui';
@@ -20,6 +23,7 @@ interface BranchDraft {
   lat: string;
   lng: string;
   phone: string;
+  googlePlaceId: string;
 }
 
 let nextKey = 1;
@@ -32,12 +36,20 @@ function emptyBranch(): BranchDraft {
     lat: '',
     lng: '',
     phone: '',
+    googlePlaceId: '',
   };
 }
 
 const initial: AuthActionState = {};
 
-export function OnboardingForm({ action }: { action: AuthFormAction }) {
+export function OnboardingForm({
+  action,
+  mapsApiKey,
+}: {
+  action: AuthFormAction;
+  /** `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, read by the server page. */
+  mapsApiKey: string | null;
+}) {
   const [state, formAction, pending] = useActionState(action, initial);
   const [branches, setBranches] = useState<BranchDraft[]>(() => [
     emptyBranch(),
@@ -73,6 +85,7 @@ export function OnboardingForm({ action }: { action: AuthFormAction }) {
       lat: Number(b.lat),
       lng: Number(b.lng),
       phone: b.phone,
+      googlePlaceId: b.googlePlaceId,
     })),
   );
 
@@ -169,13 +182,35 @@ export function OnboardingForm({ action }: { action: AuthFormAction }) {
               onChange={(e) => update(b.key, { name: e.target.value })}
               required
             />
-            <InputField
+            <FieldShell
               id={`branch-${b.key}-address`}
               label="Dirección"
-              value={b.addressLine}
-              onChange={(e) => update(b.key, { addressLine: e.target.value })}
-              required
-            />
+              hint={
+                mapsApiKey
+                  ? 'Escribe y elige la dirección; llenamos ciudad y coordenadas.'
+                  : undefined
+              }
+            >
+              <PlaceAutocompleteInput
+                id={`branch-${b.key}-address`}
+                apiKey={mapsApiKey}
+                className={fieldControlClassName}
+                value={b.addressLine}
+                onChange={(text) =>
+                  update(b.key, { addressLine: text, googlePlaceId: '' })
+                }
+                onSelect={(place) =>
+                  update(b.key, {
+                    addressLine: place.addressLine,
+                    city: place.city || b.city,
+                    lat: place.lat.toFixed(6),
+                    lng: place.lng.toFixed(6),
+                    googlePlaceId: place.placeId,
+                  })
+                }
+                required
+              />
+            </FieldShell>
             <InputField
               id={`branch-${b.key}-city`}
               label="Ciudad"

@@ -1,32 +1,34 @@
 /**
  * Contact channels shown on the "Contacto" page of both apps.
- * TODO(owner): replace placeholders with the real handles before Phase 8.
+ * Handles provided by the owner on 2026-09-22 (no WhatsApp line yet: add an
+ * entry with `href: 'https://wa.me/57…'` when one exists).
  */
 export const CONTACT_LINKS = [
   {
-    id: 'whatsapp',
-    label: 'WhatsApp',
-    href: 'https://wa.me/573000000000',
-    description: 'Escríbenos por WhatsApp',
-  },
-  {
     id: 'instagram',
     label: 'Instagram',
-    href: 'https://instagram.com/discountmaps',
+    href: 'https://www.instagram.com/discountmaps',
     description: '@discountmaps',
   },
   {
     id: 'tiktok',
     label: 'TikTok',
-    href: 'https://tiktok.com/@discountmaps',
-    description: '@discountmaps',
+    href: 'https://www.tiktok.com/@Discountmaps1',
+    description: '@Discountmaps1',
   },
   {
     id: 'email',
     label: 'Correo',
-    href: 'mailto:hola@discountmaps.co',
-    description: 'hola@discountmaps.co',
+    href: 'mailto:discountmaps1@gmail.com',
+    description: 'discountmaps1@gmail.com',
   },
 ] as const;
 
-export type ContactLink = (typeof CONTACT_LINKS)[number];
+export type ContactLinkId = (typeof CONTACT_LINKS)[number]['id'];
+
+export interface ContactLink {
+  id: ContactLinkId | (string & {});
+  label: string;
+  href: string;
+  description: string;
+}

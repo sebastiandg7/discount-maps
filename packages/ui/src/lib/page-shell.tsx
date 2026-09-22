@@ -57,9 +57,57 @@ export function BackIcon() {
   );
 }
 
-export function Brand({ subtitle }: { subtitle?: string }) {
+/** The map-pin mark used by the landing pages and the app icons (scripts/generate-icons.mjs). */
+export function BrandMark({ className = 'size-12' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M32 3C19.3 3 9 13.2 9 25.9c0 16.6 20.4 33.6 21.3 34.3a2.6 2.6 0 0 0 3.4 0C34.6 59.5 55 42.5 55 25.9 55 13.2 44.7 3 32 3z"
+        fill="currentColor"
+      />
+      <circle
+        cx="25.5"
+        cy="20"
+        r="4"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.6"
+      />
+      <circle
+        cx="38.5"
+        cy="32"
+        r="4"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.6"
+      />
+      <path
+        d="M39.5 16.5 24.5 35.5"
+        stroke="#fff"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function Brand({
+  subtitle,
+  mark = true,
+}: {
+  subtitle?: string;
+  mark?: boolean;
+}) {
   return (
     <div className="mb-8 text-center">
+      {mark ? (
+        <BrandMark className="mx-auto mb-2 size-12 text-brand-500" />
+      ) : null}
       <p className="text-3xl font-bold text-brand-600">Discount Maps</p>
       {subtitle ? <p className="mt-1 text-ink-muted">{subtitle}</p> : null}
     </div>
