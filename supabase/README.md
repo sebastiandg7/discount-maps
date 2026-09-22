@@ -21,7 +21,7 @@ select vault.create_secret('<random 32+ bytes>', 'push_dispatch_secret');
 select vault.create_secret('<random 32+ bytes>', 'qr_token_secret');
 ```
 
-`billing_cron_secret` and `push_dispatch_secret` must match `BILLING_CRON_SECRET` and `PUSH_DISPATCH_SECRET` in the people-web environment.
+`billing_cron_secret` and `push_dispatch_secret` must match `BILLING_CRON_SECRET` and `PUSH_DISPATCH_SECRET` in the people-web environment. On the cloud project only `qr_token_secret` exists so far; the hourly billing job and the new-coupon push trigger stay silent until `people_web_url` and their secrets are created.
 
 Promote the first admin: `update public.profiles set role = 'admin' where id = '<auth.users.id>';`
 

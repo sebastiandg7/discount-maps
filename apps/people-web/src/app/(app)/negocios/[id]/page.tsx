@@ -17,6 +17,8 @@ import {
   listLiveCoupons,
   logoUrl,
 } from '../../../../lib/businesses';
+import { getSession } from '../../../../lib/session';
+import { NotifyToggle } from './notify-toggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,10 +30,20 @@ export default async function BusinessPage({
   const { id } = await params;
   const business = await getPublicBusiness(id);
   if (!business || !business.id) notFound();
-  const [branches, coupons] = await Promise.all([
+  const { supabase, userId } = await getSession();
+  const [branches, coupons, follow] = await Promise.all([
     listBranches(business.id),
     listLiveCoupons(business.id),
+    userId
+      ? supabase
+          .from('business_followers')
+          .select('notify')
+          .eq('consumer_id', userId)
+          .eq('business_id', business.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
+  const following = follow.data?.notify === true;
   const located = branches.filter(
     (b): b is typeof b & { lat: number; lng: number } =>
       b.lat != null && b.lng != null,
@@ -47,6 +59,13 @@ export default async function BusinessPage({
           <Link href="/mapas" aria-label="Volver" className="text-ink">
             <BackIcon />
           </Link>
+        }
+        right={
+          <NotifyToggle
+            businessId={business.id}
+            initialFollowing={following}
+            vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || null}
+          />
         }
       />
 

@@ -22,14 +22,15 @@ Regenerate `packages/supabase/src/database.types.ts` after every schema change (
 
 Files: `supabase/migrations/<timestamp>_<name>.sql`, forward-only (never edit an applied one; add a new file). Applied so far:
 
-| File                                             | Purpose                                                                                                                                                  |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0001_init`                                      | Enums, tables, triggers, view `businesses_public`, RPCs `nearby_businesses`, `issue_coupon_token`, `verify_coupon_token`, RLS, storage buckets           |
-| `0002_grants`                                    | Explicit table/function grants; `anon` gets nothing; default privileges for future objects                                                               |
-| `0003_hardening`                                 | Pinned `search_path`, PUBLIC execute revoked, policies rewritten with `(select auth.uid())`, one SELECT policy per table, write-only owner policies      |
-| `0004_branches`                                  | `add_branch(...)` RPC (builds the PostGIS point), `branches_with_coords` view                                                                            |
-| `0005_privileged_bypass` + `0006_privileged_fix` | `is_privileged()`; admin-only triggers let direct SQL and service_role through                                                                           |
-| `0007_billing_cron`                              | `pg_cron` job `billing-run-hourly` → `net.http_post` to `<people_web_url>/api/billing/run` with `x-billing-secret`; no-op until both Vault secrets exist |
+| File                                             | Purpose                                                                                                                                                                |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0001_init`                                      | Enums, tables, triggers, view `businesses_public`, RPCs `nearby_businesses`, `issue_coupon_token`, `verify_coupon_token`, RLS, storage buckets                         |
+| `0002_grants`                                    | Explicit table/function grants; `anon` gets nothing; default privileges for future objects                                                                             |
+| `0003_hardening`                                 | Pinned `search_path`, PUBLIC execute revoked, policies rewritten with `(select auth.uid())`, one SELECT policy per table, write-only owner policies                    |
+| `0004_branches`                                  | `add_branch(...)` RPC (builds the PostGIS point), `branches_with_coords` view                                                                                          |
+| `0005_privileged_bypass` + `0006_privileged_fix` | `is_privileged()`; admin-only triggers let direct SQL and service_role through                                                                                         |
+| `0007_billing_cron`                              | `pg_cron` job `billing-run-hourly` → `net.http_post` to `<people_web_url>/api/billing/run` with `x-billing-secret`; no-op until both Vault secrets exist               |
+| `0008_push_hooks`                                | `notify_new_coupon()` AFTER INSERT on `coupons` → `net.http_post` to `<people_web_url>/api/push/new-coupon` with `x-push-secret`; no-op until both Vault secrets exist |
 
 Conventions every new migration must follow:
 

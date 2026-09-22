@@ -22,6 +22,12 @@
 - Server code that writes `subscriptions`, `payments` or `wompi_events` uses `createAdminSupabase()` (service role). Route handlers under `src/app/api/` authenticate with a shared-secret header (`x-billing-secret`) or the Wompi checksum, never with cookies.
 - Money values: the DB and Wompi use COP cents; the UI shows pesos with `formatCop`.
 
+## PWA + push (people-web)
+
+- `public/sw.js` is hand-written (push + notificationclick only, no fetch handler) and registered by `app/register-sw.tsx` from the root layout; `app/manifest.ts` serves `/manifest.webmanifest`; `proxy.ts` already skips `sw.js`, the manifest and `/icons/`.
+- `NotifyToggle` must call `Notification.requestPermission()` inside the click handler (user gesture), then `navigator.serviceWorker.ready` → `pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })` with `NEXT_PUBLIC_VAPID_PUBLIC_KEY` converted to a `Uint8Array`. iOS Safari outside an installed PWA has no `PushManager`: show the install sheet instead of an error.
+- Never import `web-push` outside `src/lib/push.ts` (`server-only`); the pure fan-out lives in `src/lib/push-dispatch.ts` so it can be unit-tested.
+
 ## Browser-only libraries
 
 The QR scanner (`@yudiel/react-qr-scanner`) touches `navigator` at render time: load it from a client component with `next/dynamic(() => import(...).then(m => m.Scanner), { ssr: false })`. Camera and geolocation need a secure context (`localhost` or HTTPS); handle the `permission-denied` / `no-camera` error kinds with a manual fallback (see `/verificar`). Its ZXing WASM fallback (browsers without `BarcodeDetector`) is fetched from a CDN at runtime.
