@@ -12,6 +12,7 @@ import {
   isChargeDue,
   MAX_CHARGE_ATTEMPTS,
   PAYMENT_CURRENCY,
+  periodAnchor,
   planCharge,
   type BillableSubscription,
   type PaymentOutcome,
@@ -178,6 +179,112 @@ export async function reconcilePendingPayments(
   return reconciled;
 }
 
+export type ChargeResult = 'charged' | 'failed' | 'skipped';
+
+/**
+ * Creates the Wompi charge for one subscription that `isChargeDue` already
+ * approved: inserts the pending payment, bumps the attempt counter, asks
+ * Wompi, and records the outcome. `amountCents` defaults to the configured price.
+ */
+export async function chargeSubscription(
+  admin: AdminSupabase,
+  wompi: WompiClient,
+  sub: Subscription,
+  now: Date = new Date(),
+  amountCents: number = subscriptionPriceCents(),
+): Promise<ChargeResult> {
+  if (!sub.wompi_payment_source_id) return 'skipped';
+  const periodStart = periodAnchor(sub as BillableSubscription);
+  const { count: priorPayments } = await admin
+    .from('payments')
+    .select('id', { count: 'exact', head: true })
+    .eq('subscription_id', sub.id)
+    .eq('period_start', periodStart.toISOString());
+  const plan = planCharge(sub as BillableSubscription, now, priorPayments ?? 0);
+  const { data: payment, error: insertError } = await admin
+    .from('payments')
+    .insert({
+      subscription_id: sub.id,
+      reference: plan.reference,
+      amount_cents: amountCents,
+      currency: PAYMENT_CURRENCY,
+      status: 'pending',
+      attempt: plan.attempt,
+      period_start: plan.periodStart.toISOString(),
+      period_end: plan.periodEnd.toISOString(),
+    })
+    .select('*')
+    .single();
+  if (insertError || !payment) {
+    // Reference already used (a previous run crashed after inserting): leave it to reconcile.
+    return 'skipped';
+  }
+  await admin
+    .from('subscriptions')
+    .update({
+      charge_attempts: plan.attempt,
+      next_charge_at: plan.nextChargeAt.toISOString(),
+    })
+    .eq('id', sub.id);
+
+  try {
+    const trx = await wompi.createTransaction({
+      amountInCents: amountCents,
+      currency: PAYMENT_CURRENCY,
+      customerEmail: sub.wompi_customer_email,
+      reference: plan.reference,
+      paymentSourceId: sub.wompi_payment_source_id,
+    });
+    await admin
+      .from('payments')
+      .update({
+        wompi_transaction_id: trx.id,
+        raw: trx as unknown as Json,
+      })
+      .eq('id', payment.id);
+    await recordPaymentOutcome(admin, payment, trx, now);
+    return 'charged';
+  } catch (error) {
+    const body = error instanceof WompiError ? error.body : String(error);
+    await admin
+      .from('payments')
+      .update({ status: 'error', raw: { error: body } as unknown as Json })
+      .eq('id', payment.id);
+    const patch = applyPaymentOutcome(
+      sub as BillableSubscription,
+      'ERROR',
+      now,
+    );
+    if (patch) {
+      await admin
+        .from('subscriptions')
+        .update({
+          status: patch.status,
+          next_charge_at: patch.next_charge_at?.toISOString() ?? null,
+          ...(patch.canceled_at !== undefined
+            ? { canceled_at: patch.canceled_at?.toISOString() ?? null }
+            : {}),
+        })
+        .eq('id', sub.id);
+    }
+    console.error('[billing] charge failed', sub.id, body);
+    return 'failed';
+  }
+}
+
+/** True when a pending payment already exists for the subscription (never double-charge). */
+export async function hasPendingPayment(
+  admin: AdminSupabase,
+  subscriptionId: string,
+): Promise<boolean> {
+  const { count } = await admin
+    .from('payments')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending')
+    .eq('subscription_id', subscriptionId);
+  return (count ?? 0) > 0;
+}
+
 /** Creates one Wompi charge per due subscription (see mvp-plan § 4 "Billing"). */
 export async function chargeDueSubscriptions(
   admin: AdminSupabase,
@@ -211,77 +318,84 @@ export async function chargeDueSubscriptions(
       summary.skipped++;
       continue;
     }
-    const plan = planCharge(sub as BillableSubscription, now);
-    const { data: payment, error: insertError } = await admin
-      .from('payments')
-      .insert({
-        subscription_id: sub.id,
-        reference: plan.reference,
-        amount_cents: amountCents,
-        currency: PAYMENT_CURRENCY,
-        status: 'pending',
-        attempt: plan.attempt,
-        period_start: plan.periodStart.toISOString(),
-        period_end: plan.periodEnd.toISOString(),
-      })
-      .select('*')
-      .single();
-    if (insertError || !payment) {
-      // Reference already used (a previous run crashed after inserting): leave it to reconcile.
-      summary.skipped++;
-      continue;
-    }
-    await admin
-      .from('subscriptions')
-      .update({
-        charge_attempts: plan.attempt,
-        next_charge_at: plan.nextChargeAt.toISOString(),
-      })
-      .eq('id', sub.id);
-
-    try {
-      const trx = await wompi.createTransaction({
-        amountInCents: amountCents,
-        currency: PAYMENT_CURRENCY,
-        customerEmail: sub.wompi_customer_email,
-        reference: plan.reference,
-        paymentSourceId: sub.wompi_payment_source_id!,
-      });
-      await admin
-        .from('payments')
-        .update({
-          wompi_transaction_id: trx.id,
-          raw: trx as unknown as Json,
-        })
-        .eq('id', payment.id);
-      await recordPaymentOutcome(admin, payment, trx, now);
-      summary.charged++;
-    } catch (error) {
-      const body = error instanceof WompiError ? error.body : String(error);
-      await admin
-        .from('payments')
-        .update({ status: 'error', raw: { error: body } as unknown as Json })
-        .eq('id', payment.id);
-      const patch = applyPaymentOutcome(
-        sub as BillableSubscription,
-        'ERROR',
-        now,
-      );
-      if (patch) {
-        await admin
-          .from('subscriptions')
-          .update({
-            status: patch.status,
-            next_charge_at: patch.next_charge_at?.toISOString() ?? null,
-            ...(patch.canceled_at !== undefined
-              ? { canceled_at: patch.canceled_at?.toISOString() ?? null }
-              : {}),
-          })
-          .eq('id', sub.id);
-      }
-      console.error('[billing] charge failed', sub.id, body);
-      summary.failed++;
-    }
+    summary[await chargeSubscription(admin, wompi, sub, now, amountCents)]++;
   }
   return summary;
+}
+
+/** What the card form needs from Wompi (acceptance tokens + tokenization key). */
+export async function getCardCaptureData() {
+  const wompi = wompiClient();
+  let tokens: Awaited<ReturnType<typeof wompi.getAcceptanceTokens>> | null =
+    null;
+  let tokenizationKey: string | null = null;
+  try {
+    tokens = await wompi.getAcceptanceTokens();
+  } catch (error) {
+    console.error('[billing] acceptance tokens failed', error);
+  }
+  try {
+    tokenizationKey = await wompi.getTokenizationKey();
+  } catch {
+    tokenizationKey = null; // plain tokenization still works
+  }
+  return {
+    tokens,
+    tokenizationKey,
+    apiUrl:
+      process.env.NEXT_PUBLIC_WOMPI_API_URL ?? 'https://sandbox.wompi.co/v1',
+    publicKey: process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY ?? '',
+  };
+}
+
+export const CARD_CAPTURE_ERROR =
+  'No pudimos registrar tu tarjeta. Revisa los datos e intenta de nuevo.';
+
+export interface CardTokenInput {
+  cardToken: string;
+  acceptanceToken: string;
+  acceptPersonalAuth: string;
+}
+
+/**
+ * Turns a browser-minted card token into an AVAILABLE Wompi payment source.
+ * Returns a Spanish error when the token is malformed, Wompi rejects it, or
+ * the bank wants an extra verification step (3-D Secure) we do not support.
+ */
+export async function capturePaymentSource(
+  input: CardTokenInput,
+  email: string,
+): Promise<
+  | { source: Awaited<ReturnType<WompiClient['createPaymentSource']>> }
+  | { error: string }
+> {
+  if (
+    typeof input.cardToken !== 'string' ||
+    !/^tok_(test|prod)_/.test(input.cardToken) ||
+    !input.acceptanceToken ||
+    !input.acceptPersonalAuth
+  ) {
+    return { error: CARD_CAPTURE_ERROR };
+  }
+  try {
+    const source = await wompiClient().createPaymentSource({
+      token: input.cardToken,
+      customerEmail: email,
+      acceptanceToken: input.acceptanceToken,
+      acceptPersonalAuth: input.acceptPersonalAuth,
+    });
+    if (source.status !== 'AVAILABLE') {
+      return {
+        error:
+          'Tu banco requiere una verificación adicional que aún no soportamos. Intenta con otra tarjeta.',
+      };
+    }
+    return { source };
+  } catch (error) {
+    console.error(
+      '[billing] payment source failed',
+      error instanceof WompiError ? error.body : error,
+    );
+    return { error: CARD_CAPTURE_ERROR };
+  }
 }

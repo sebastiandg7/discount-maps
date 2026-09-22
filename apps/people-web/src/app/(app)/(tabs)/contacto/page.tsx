@@ -1,13 +1,14 @@
-import { EmptyState, PageShell, TopBar } from '@org/ui';
+import { ContactLinks, PageShell, TopBar } from '@org/ui';
 
 export default function ContactPage() {
   return (
     <PageShell className="pb-20">
       <TopBar title="Contacto" />
-      <EmptyState
-        title="Muy pronto"
-        description="Aquí encontrarás nuestros canales de contacto."
-      />
+      <p className="mb-4 text-ink-muted">
+        ¿Tienes una duda, un problema con un cupón o quieres sumar tu negocio?
+        Escríbenos por cualquiera de estos canales.
+      </p>
+      <ContactLinks />
     </PageShell>
   );
 }

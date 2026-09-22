@@ -7,7 +7,7 @@
 
 ## Components (`@org/ui`)
 
-`Button` / `buttonClassName` (variants primary, secondary, ghost, danger; use `buttonClassName` on `next/link`), `InputField`, `TextareaField`, `SelectField`, `FormError`, `PageShell`, `TopBar` (left back link, title, right slot), `BackIcon`, `Brand`, `EmptyState`, `Toggle` (role=switch), `LoginForm`, `SignupForm`, `CouponCard`, `BottomNav` (+ `MapIcon`, `ChatIcon`, `UserIcon`, `QrIcon`), `CategoryChips`, `QrCode` (wraps `qrcode.react`).
+`Button` / `buttonClassName` (variants primary, secondary, ghost, danger; use `buttonClassName` on `next/link`), `InputField`, `TextareaField`, `SelectField`, `FormError`, `PageShell`, `TopBar` (left back link, title, right slot), `BackIcon`, `Brand`, `EmptyState`, `Toggle` (role=switch), `LoginForm`, `SignupForm`, `ProfileForm` / `PasswordForm` (+ `FormNotice`, the green success banner), `ContactLinks` (renders `CONTACT_LINKS`), `CouponCard`, `BottomNav` (+ `MapIcon`, `ChatIcon`, `UserIcon`, `QrIcon`), `CategoryChips`, `QrCode` (wraps `qrcode.react`).
 
 - **`CouponCard` is the single coupon rendering.** The merchant editor renders it with `preview` and the consumer app renders the same component; never fork it.
 - `@org/ui` may import `@org/domain` but nothing from Next (`next/link`, `next/image`); pass `href`s and let apps wrap with `Link` where needed. Use plain `<img>` for user uploads (no Next lint rule applies inside the package).
@@ -18,7 +18,8 @@
 
 ## Payments (people-web only)
 
-- `@org/billing-wompi` is `server-only` and `scope:people`; construct it through `wompiClient()` in `src/lib/billing.ts`, never in client code. Card data is tokenized in the browser by `card-form.tsx` (JWE via `jose` with the key from `getTokenizationKey()`, falling back to plain JSON) using only `NEXT_PUBLIC_WOMPI_*`; the server receives a `tok_…` token, never the card.
+- `@org/billing-wompi` is `server-only` and `scope:people`; construct it through `wompiClient()` in `src/lib/billing.ts`, never in client code. Card data is tokenized in the browser by `src/components/card-form.tsx` (JWE via `jose` with the key from `getTokenizationKey()`, falling back to plain JSON) using only `NEXT_PUBLIC_WOMPI_*`; the server receives a `tok_…` token, never the card. `CardForm` takes the server `action`, `submitLabel` and `intro` as props so `/suscripcion/tarjeta` (`startTrialAction`) and `/cuenta/tarjeta` (`updateCardAction`) share it; pages load Wompi's tokens with `getCardCaptureData()` and actions turn the token into a source with `capturePaymentSource()`.
+- Charges go through `chargeSubscription()` (one row) whether the hourly run or the update-card action triggers them; it counts the payments already in the period so references never collide after `charge_attempts` is reset.
 - Server code that writes `subscriptions`, `payments` or `wompi_events` uses `createAdminSupabase()` (service role). Route handlers under `src/app/api/` authenticate with a shared-secret header (`x-billing-secret`) or the Wompi checksum, never with cookies.
 - Money values: the DB and Wompi use COP cents; the UI shows pesos with `formatCop`.
 
@@ -36,7 +37,7 @@ The QR scanner (`@yudiel/react-qr-scanner`) touches `navigator` at render time: 
 
 Two patterns, pick by complexity:
 
-1. **Simple forms** (auth, onboarding): plain `<form action={serverAction}>` with `useActionState`. The action returns `AuthActionState` = `{ error?, fieldErrors?, values? }`. **Always echo `values` back on validation failure and set `defaultValue={state.values?.x}`**: React 19 resets uncontrolled inputs after any action, so without this a validation error wipes the form.
+1. **Simple forms** (auth, onboarding, account settings): plain `<form action={serverAction}>` with `useActionState`. The action returns `AuthActionState` = `{ error?, message?, fieldErrors?, values? }` (`message` is the success notice, rendered by `FormNotice`). **Always echo `values` back on validation failure and set `defaultValue={state.values?.x}`**: React 19 resets uncontrolled inputs after any action, so without this a validation error wipes the form. Settings forms that edit existing data merge `values` over the server-provided defaults (`{ ...values, ...state.values }`).
 2. **Rich forms** (coupon editor): `react-hook-form` + `zodResolver(schema from @org/domain)` with `mode: 'onChange'`; `useWatch({ control })` feeds live previews; on submit build a `FormData` and call the server action inside `useTransition`. Numbers use `setValueAs: v => v === '' ? null : Number(v)`.
 
 Server actions: validate again with the same zod schema, use `fieldErrorMap(error)` for per-field messages, write with the user-session client so RLS applies, `revalidatePath` then `redirect`. Map database errors to Spanish (`friendlyDbError` pattern; the `MIN_ACTIVE_COUPONS` trigger hint is already Spanish).

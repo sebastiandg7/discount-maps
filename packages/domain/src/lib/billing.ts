@@ -8,6 +8,7 @@ import {
   addDays,
   CHARGE_RETRY_DAYS,
   MAX_CHARGE_ATTEMPTS,
+  subscriptionAccessUntil,
   type SubscriptionLike,
   type SubscriptionStatus,
 } from './subscription';
@@ -114,10 +115,16 @@ export interface ChargePlan {
   nextChargeAt: Date;
 }
 
-/** What the billing run records before asking Wompi for the money. */
+/**
+ * What the billing run records before asking Wompi for the money.
+ * `priorPayments` is how many payments already exist for this period: after a
+ * card update resets `charge_attempts`, the reference must not collide with
+ * the earlier attempts (references are unique per payment).
+ */
 export function planCharge(
   s: BillableSubscription,
   now: Date = new Date(),
+  priorPayments = 0,
 ): ChargePlan {
   const attempt = s.charge_attempts + 1;
   const periodStart = periodAnchor(s);
@@ -125,7 +132,11 @@ export function planCharge(
     attempt,
     periodStart,
     periodEnd: addMonths(periodStart, SUBSCRIPTION_PERIOD_MONTHS),
-    reference: paymentReference(s.id, periodStart, attempt),
+    reference: paymentReference(
+      s.id,
+      periodStart,
+      Math.max(attempt, priorPayments + 1),
+    ),
     nextChargeAt: addDays(now, CHARGE_RETRY_DAYS),
   };
 }
@@ -170,3 +181,53 @@ export const paymentOutcomeLabels: Record<PaymentOutcome, string> = {
   VOIDED: 'Anulado',
   ERROR: 'Error',
 };
+
+/**
+ * "Cancelar suscripción": no more charges, access continues until
+ * `subscriptionAccessUntil` (period end or trial end, see SQL
+ * `subscription_access_until`). Null when already canceled.
+ */
+export function cancelSubscription(
+  s: BillableSubscription,
+  now: Date = new Date(),
+): SubscriptionPatch | null {
+  if (s.status === 'canceled') return null;
+  return { status: 'canceled', next_charge_at: null, canceled_at: now };
+}
+
+/**
+ * "Actualizar tarjeta": what changes besides the payment source. Trialing and
+ * active subscriptions only swap the card (null). A past_due one gets its
+ * attempts reset and becomes due immediately. A canceled one is reactivated:
+ * with time left it goes back to trialing/active and is charged at the end of
+ * that period, otherwise it becomes past_due and due immediately.
+ */
+export function applyNewPaymentSource(
+  s: BillableSubscription,
+  now: Date = new Date(),
+): SubscriptionPatch | null {
+  if (s.status === 'trialing' || s.status === 'active') return null;
+  if (s.status === 'past_due') {
+    return { status: 'past_due', next_charge_at: now, charge_attempts: 0 };
+  }
+  const until = subscriptionAccessUntil(s);
+  if (until && until.getTime() > now.getTime()) {
+    const trialEnd = toDate(s.trial_ends_at);
+    const inTrial =
+      s.current_period_end == null &&
+      trialEnd !== null &&
+      trialEnd.getTime() > now.getTime();
+    return {
+      status: inTrial ? 'trialing' : 'active',
+      next_charge_at: until,
+      charge_attempts: 0,
+      canceled_at: null,
+    };
+  }
+  return {
+    status: 'past_due',
+    next_charge_at: now,
+    charge_attempts: 0,
+    canceled_at: null,
+  };
+}

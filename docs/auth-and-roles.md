@@ -32,19 +32,21 @@ business-web route groups under `src/app/(app)/`:
 - `layout.tsx`: session required (defense in depth).
 - `onboarding/`: merchant without a business. Admin → `/admin`; existing business → `/pendiente`.
 - `pendiente/`: pending or rejected business copy; verified → `/inicio`.
-- `(verified)/layout.tsx`: admin → `/admin`; no business → `/onboarding`; not verified → `/pendiente`. Everything a merchant does day to day (`inicio`, `cupones`, later `verificar`, `cuenta`) lives here.
+- `(verified)/layout.tsx`: admin → `/admin`; no business → `/onboarding`; not verified → `/pendiente`. Everything a merchant does day to day (`inicio`, `cupones`, `verificar`, `contacto`, `cuenta`) lives here. `cuenta/` edits the business (owner RLS + `protect_business_verification`), branches (`add_branch`, delete guarded by `branches_min_one`), the profile and the password.
 - `admin/`: `notFound()` unless role is admin.
 
 people-web route groups under `src/app/(app)/`:
 
 - `layout.tsx`: session required (defense in depth).
-- `(tabs)/`: the shell with `BottomNav` — `mapas/`, `contacto/` (placeholder), `cuenta/` (placeholder + sign-out). Pages use `pb-20`.
-- `negocios/[id]/` and `negocios/[id]/cupones/[couponId]/`: full-screen pages with a back link, outside the tab shell.
+- `(tabs)/`: the shell with `BottomNav` — `mapas/`, `contacto/` (`ContactLinks`), `cuenta/` (subscription card with cancel, profile, password, sign-out). Pages use `pb-20`.
+- `negocios/[id]/`, `negocios/[id]/cupones/[couponId]/` and `cuenta/tarjeta/` (update / reactivate card): full-screen pages with a back link, outside the tab shell. `cuenta/tarjeta` needs an existing `subscriptions` row (otherwise → `/suscripcion/tarjeta`).
 - `inicio/`: redirects to `/mapas` (the business app and older callbacks still point here). Post-login `HOME` is `/mapas`.
 
 - `(subscribe)/suscripcion/tarjeta/`: session required, **no** `subscriptions` row (otherwise → `/mapas`). This is the trial gate's destination.
 
-Trial gate: `(app)/layout.tsx` looks up the consumer's `subscriptions` row (`getOwnSubscription`, cached per render) and redirects to `/suscripcion/tarjeta` when there is none; admins are exempt. An existing but lapsed subscription still enters the app — the coupon detail shows "Tu suscripción no está activa" when `issue_coupon_token` raises `SUBSCRIPTION_INACTIVE` (cancel / update card land in Phase 8).
+Trial gate: `(app)/layout.tsx` looks up the consumer's `subscriptions` row (`getOwnSubscription`, cached per render) and redirects to `/suscripcion/tarjeta` when there is none; admins are exempt. An existing but lapsed subscription still enters the app — the coupon detail shows "Tu suscripción no está activa" when `issue_coupon_token` raises `SUBSCRIPTION_INACTIVE`, and `/cuenta` offers "Reactivar suscripción" (→ `/cuenta/tarjeta`).
+
+Password change (`changePasswordAction` in both apps) calls `supabase.auth.updateUser({ password })` on the user-session client; Supabase rejects reusing the current password ("debe ser diferente"). Email changes are not self-service in the MVP.
 
 ## Auth flows
 

@@ -1,36 +1,26 @@
+import { formatCop } from '@org/domain';
 import { Brand, Button, EmptyState, PageShell } from '@org/ui';
-import { subscriptionPricePesos, wompiClient } from '../../../../lib/billing';
+import { CardForm } from '../../../../components/card-form';
+import {
+  getCardCaptureData,
+  subscriptionPricePesos,
+} from '../../../../lib/billing';
 import { signOutAction } from '../../../auth/actions';
-import { CardForm } from './card-form';
+import { startTrialAction } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CardPage() {
-  const wompi = wompiClient();
-  let tokens: Awaited<ReturnType<typeof wompi.getAcceptanceTokens>> | null =
-    null;
-  let tokenizationKey: string | null = null;
-  try {
-    tokens = await wompi.getAcceptanceTokens();
-  } catch (error) {
-    console.error('[billing] acceptance tokens failed', error);
-  }
-  try {
-    tokenizationKey = await wompi.getTokenizationKey();
-  } catch {
-    tokenizationKey = null; // plain tokenization still works
-  }
+  const { tokens, tokenizationKey, apiUrl, publicKey } =
+    await getCardCaptureData();
 
   return (
     <PageShell>
       <Brand subtitle="Registra tu tarjeta para empezar" />
       {tokens ? (
         <CardForm
-          apiUrl={
-            process.env.NEXT_PUBLIC_WOMPI_API_URL ??
-            'https://sandbox.wompi.co/v1'
-          }
-          publicKey={process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY ?? ''}
+          apiUrl={apiUrl}
+          publicKey={publicKey}
           tokenizationKey={tokenizationKey}
           acceptance={{
             token: tokens.presigned_acceptance.acceptance_token,
@@ -40,7 +30,15 @@ export default async function CardPage() {
             token: tokens.presigned_personal_data_auth.acceptance_token,
             permalink: tokens.presigned_personal_data_auth.permalink,
           }}
-          pricePesos={subscriptionPricePesos()}
+          action={startTrialAction}
+          submitLabel="Empezar mi semana gratis"
+          intro={
+            <p className="rounded-card bg-brand-50 px-4 py-3 text-sm text-brand-700">
+              Tu primera semana es gratis. Después cobraremos{' '}
+              <strong>{formatCop(subscriptionPricePesos())}</strong> al mes a
+              esta tarjeta. Puedes cancelar cuando quieras.
+            </p>
+          }
         />
       ) : (
         <EmptyState

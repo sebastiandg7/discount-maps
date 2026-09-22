@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, type ReactNode } from 'react';
 import { EncryptJWT, importSPKI } from 'jose';
-import { formatCop } from '@org/domain';
 import { Button, FormError, InputField } from '@org/ui';
-import { startTrialAction } from './actions';
 
 export interface CardFormProps {
   /** Wompi sandbox/production base URL with /v1. */
@@ -14,7 +12,22 @@ export interface CardFormProps {
   tokenizationKey: string | null;
   acceptance: { token: string; permalink: string };
   personalData: { token: string; permalink: string };
-  pricePesos: number;
+  /** Server action that turns the card token into a payment source. */
+  action: (input: CardSubmission) => Promise<{ error?: string }>;
+  submitLabel: string;
+  /** Copy shown above the fields (price, what happens next). */
+  intro: ReactNode;
+}
+
+/** What the browser hands to the server after tokenizing the card with Wompi. */
+export interface CardSubmission {
+  /** Card token minted in the browser with the public key (tok_test_… / tok_prod_…). */
+  cardToken: string;
+  acceptanceToken: string;
+  acceptPersonalAuth: string;
+  /** Display data from the tokenization response (fallback when Wompi omits public_data). */
+  brand?: string | null;
+  last4?: string | null;
 }
 
 interface CardInfo {
@@ -142,7 +155,7 @@ export function CardForm(props: CardFormProps) {
         );
         return;
       }
-      const result = await startTrialAction({
+      const result = await props.action({
         cardToken: token.data.id,
         acceptanceToken: props.acceptance.token,
         acceptPersonalAuth: props.personalData.token,
@@ -155,11 +168,7 @@ export function CardForm(props: CardFormProps) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-      <p className="rounded-card bg-brand-50 px-4 py-3 text-sm text-brand-700">
-        Tu primera semana es gratis. Después cobraremos{' '}
-        <strong>{formatCop(props.pricePesos)}</strong> al mes a esta tarjeta.
-        Puedes cancelar cuando quieras.
-      </p>
+      {props.intro}
       <InputField
         id="holder"
         label="Nombre en la tarjeta"
@@ -259,7 +268,7 @@ export function CardForm(props: CardFormProps) {
 
       <FormError message={error} />
       <Button type="submit" block loading={pending}>
-        Empezar mi semana gratis
+        {props.submitLabel}
       </Button>
       <p className="text-center text-xs text-ink-muted">
         Tus datos viajan cifrados directamente a Wompi; nunca pasan por nuestros

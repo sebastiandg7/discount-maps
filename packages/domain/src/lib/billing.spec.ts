@@ -1,6 +1,8 @@
 import {
   addMonths,
+  applyNewPaymentSource,
   applyPaymentOutcome,
+  cancelSubscription,
   isChargeDue,
   parsePaymentReference,
   paymentReference,
@@ -159,5 +161,108 @@ describe('applyPaymentOutcome', () => {
       next_charge_at: null,
       canceled_at: NOW,
     });
+  });
+});
+
+describe('cancelSubscription', () => {
+  it('stops charges and keeps the period end untouched', () => {
+    const periodEnd = addDays(NOW, 20);
+    const patch = cancelSubscription(
+      sub({ status: 'active', current_period_end: periodEnd }),
+      NOW,
+    );
+    expect(patch).toEqual({
+      status: 'canceled',
+      next_charge_at: null,
+      canceled_at: NOW,
+    });
+  });
+
+  it('is a no-op when already canceled', () => {
+    expect(cancelSubscription(sub({ status: 'canceled' }), NOW)).toBeNull();
+  });
+});
+
+describe('applyNewPaymentSource', () => {
+  it('only swaps the card on trialing / active subscriptions', () => {
+    expect(applyNewPaymentSource(sub({ status: 'trialing' }), NOW)).toBeNull();
+    expect(
+      applyNewPaymentSource(
+        sub({ status: 'active', current_period_end: addDays(NOW, 10) }),
+        NOW,
+      ),
+    ).toBeNull();
+  });
+
+  it('resets attempts and makes a past_due subscription due now', () => {
+    expect(
+      applyNewPaymentSource(
+        sub({ status: 'past_due', charge_attempts: 2 }),
+        NOW,
+      ),
+    ).toEqual({ status: 'past_due', next_charge_at: NOW, charge_attempts: 0 });
+  });
+
+  it('reactivates a canceled subscription with time left as active', () => {
+    const periodEnd = addDays(NOW, 12);
+    expect(
+      applyNewPaymentSource(
+        sub({
+          status: 'canceled',
+          current_period_end: periodEnd,
+          charge_attempts: 3,
+        }),
+        NOW,
+      ),
+    ).toEqual({
+      status: 'active',
+      next_charge_at: periodEnd,
+      charge_attempts: 0,
+      canceled_at: null,
+    });
+  });
+
+  it('reactivates a canceled trial with time left as trialing', () => {
+    const trialEnd = addDays(NOW, 3);
+    expect(
+      applyNewPaymentSource(
+        sub({ status: 'canceled', trial_ends_at: trialEnd }),
+        NOW,
+      ),
+    ).toEqual({
+      status: 'trialing',
+      next_charge_at: trialEnd,
+      charge_attempts: 0,
+      canceled_at: null,
+    });
+  });
+
+  it('makes an expired canceled subscription past_due and due now', () => {
+    expect(
+      applyNewPaymentSource(
+        sub({
+          status: 'canceled',
+          trial_ends_at: addDays(NOW, -40),
+          current_period_end: addDays(NOW, -10),
+          charge_attempts: 3,
+        }),
+        NOW,
+      ),
+    ).toEqual({
+      status: 'past_due',
+      next_charge_at: NOW,
+      charge_attempts: 0,
+      canceled_at: null,
+    });
+  });
+});
+
+describe('planCharge after a card update', () => {
+  it('keeps the attempt count but skips references already used this period', () => {
+    const s = sub({ status: 'past_due', charge_attempts: 0 });
+    const plan = planCharge(s, NOW, 3);
+    expect(plan.attempt).toBe(1);
+    expect(plan.reference).toBe(paymentReference(ID, NOW, 4));
+    expect(planCharge(s, NOW, 0).reference).toBe(paymentReference(ID, NOW, 1));
   });
 });
