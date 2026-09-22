@@ -12,7 +12,7 @@ Nx 23 · pnpm 11 · TypeScript project references ("TS solution" setup) · Next.
 | `packages/supabase`        | Typed clients (`./browser`, `./server`, `./proxy`), generated `Database` types, role + storage helpers | `type:data`, `scope:shared`   |
 | `packages/ui`              | Shared React components + `theme.css` design tokens                                                    | `type:ui`, `scope:shared`     |
 | `packages/maps`            | Geolocation hook, navigation deep links, `BusinessMap` (placeholder until the Maps key exists)         | `type:ui`, `scope:shared`     |
-| `packages/billing-wompi`   | Server-only Wompi client (empty until Phase 6)                                                         | `type:server`, `scope:people` |
+| `packages/billing-wompi`   | Server-only Wompi client, integrity signature, webhook checksum (`import 'server-only'` in its index)  | `type:server`, `scope:people` |
 | `supabase/`                | Migrations, pgTAP tests, local config                                                                  |                               |
 | `scripts/pgtap-remote.mjs` | Runs pgTAP suites against the linked cloud project without Docker                                      |                               |
 | `docs/`                    | This knowledge base; `mvp-plan.md` is the plan + progress source of truth                              |                               |

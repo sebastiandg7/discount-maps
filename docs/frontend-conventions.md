@@ -16,6 +16,12 @@
 
 `@org/maps`: `useGeolocation` (one-shot, Bogotá fallback, `isFallback` + `locate()` for the "Usar mi ubicación" chip), `googleMapsDirectionsUrl` / `wazeUrl`, and `BusinessMap`, a placeholder until the Maps key exists. Read `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in a **server** component and pass it as `apiKey` (env inlining is not guaranteed inside transpiled packages).
 
+## Payments (people-web only)
+
+- `@org/billing-wompi` is `server-only` and `scope:people`; construct it through `wompiClient()` in `src/lib/billing.ts`, never in client code. Card data is tokenized in the browser by `card-form.tsx` (JWE via `jose` with the key from `getTokenizationKey()`, falling back to plain JSON) using only `NEXT_PUBLIC_WOMPI_*`; the server receives a `tok_…` token, never the card.
+- Server code that writes `subscriptions`, `payments` or `wompi_events` uses `createAdminSupabase()` (service role). Route handlers under `src/app/api/` authenticate with a shared-secret header (`x-billing-secret`) or the Wompi checksum, never with cookies.
+- Money values: the DB and Wompi use COP cents; the UI shows pesos with `formatCop`.
+
 ## Browser-only libraries
 
 The QR scanner (`@yudiel/react-qr-scanner`) touches `navigator` at render time: load it from a client component with `next/dynamic(() => import(...).then(m => m.Scanner), { ssr: false })`. Camera and geolocation need a secure context (`localhost` or HTTPS); handle the `permission-denied` / `no-camera` error kinds with a manual fallback (see `/verificar`). Its ZXing WASM fallback (browsers without `BarcodeDetector`) is fetched from a CDN at runtime.

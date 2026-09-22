@@ -42,7 +42,9 @@ people-web route groups under `src/app/(app)/`:
 - `negocios/[id]/` and `negocios/[id]/cupones/[couponId]/`: full-screen pages with a back link, outside the tab shell.
 - `inicio/`: redirects to `/mapas` (the business app and older callbacks still point here). Post-login `HOME` is `/mapas`.
 
-The subscription gate (`/suscripcion/tarjeta` when no `subscriptions` row) arrives in Phase 6; until then the coupon detail shows an inline "Tu suscripción no está activa" card when `issue_coupon_token` raises `SUBSCRIPTION_INACTIVE`.
+- `(subscribe)/suscripcion/tarjeta/`: session required, **no** `subscriptions` row (otherwise → `/mapas`). This is the trial gate's destination.
+
+Trial gate: `(app)/layout.tsx` looks up the consumer's `subscriptions` row (`getOwnSubscription`, cached per render) and redirects to `/suscripcion/tarjeta` when there is none; admins are exempt. An existing but lapsed subscription still enters the app — the coupon detail shows "Tu suscripción no está activa" when `issue_coupon_token` raises `SUBSCRIPTION_INACTIVE` (cancel / update card land in Phase 8).
 
 ## Auth flows
 
