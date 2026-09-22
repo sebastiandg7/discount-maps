@@ -13,7 +13,10 @@ export default async function OnboardingPage() {
   return (
     <PageShell>
       <Brand subtitle="Cuéntanos sobre tu empresa y sus sedes." />
-      <OnboardingForm action={createBusinessAction} />
+      <OnboardingForm
+        action={createBusinessAction}
+        mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null}
+      />
       <form action={signOutAction} className="mt-8">
         <Button type="submit" variant="ghost" block>
           Cerrar sesión

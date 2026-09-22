@@ -9,6 +9,7 @@ export default function MapsPage() {
       <TopBar title="Mapas" />
       <NearbyExplorer
         apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null}
+        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || null}
       />
     </PageShell>
   );

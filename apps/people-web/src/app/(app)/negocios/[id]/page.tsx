@@ -101,11 +101,13 @@ export default async function BusinessPage({
             : { lat: 4.711, lng: -74.0721 }
         }
         apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null}
+        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || null}
         markers={located.map((b) => ({
           id: b.id ?? '',
           lat: b.lat,
           lng: b.lng,
           label: b.name ?? displayName,
+          description: [b.address_line, b.city].filter(Boolean).join(', '),
         }))}
         className="mb-6"
       />

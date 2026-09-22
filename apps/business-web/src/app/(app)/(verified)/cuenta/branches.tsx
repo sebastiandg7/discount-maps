@@ -2,11 +2,14 @@
 
 import { useActionState, useState, useTransition } from 'react';
 import { DEFAULT_MAP_CENTER, MAX_BRANCHES } from '@org/domain';
+import { PlaceAutocompleteInput } from '@org/maps';
 import {
   Button,
+  FieldShell,
   FormError,
   FormNotice,
   InputField,
+  fieldControlClassName,
   type AuthActionState,
   type AuthFormAction,
 } from '@org/ui';
@@ -78,12 +81,18 @@ export function BranchList({ branches }: { branches: BranchRow[] }) {
 export function AddBranchForm({
   action,
   count,
+  mapsApiKey,
 }: {
   action: AuthFormAction;
   count: number;
+  /** `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, read by the server page. */
+  mapsApiKey: string | null;
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
   const [coords, setCoords] = useState({ lat: '', lng: '' });
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('Bogotá');
+  const [placeId, setPlaceId] = useState('');
   const v = state.values ?? {};
 
   const locate = () => {
@@ -121,19 +130,45 @@ export function AddBranchForm({
         required
         error={state.fieldErrors?.name}
       />
-      <InputField
+      <FieldShell
         id="branch-address"
-        name="addressLine"
         label="Dirección"
-        defaultValue={v.addressLine}
-        required
+        hint={
+          mapsApiKey
+            ? 'Escribe y elige la dirección; llenamos ciudad y coordenadas.'
+            : undefined
+        }
         error={state.fieldErrors?.addressLine}
-      />
+      >
+        <PlaceAutocompleteInput
+          id="branch-address"
+          name="addressLine"
+          apiKey={mapsApiKey}
+          className={fieldControlClassName}
+          value={address || v.addressLine || ''}
+          onChange={(text) => {
+            setAddress(text);
+            setPlaceId('');
+          }}
+          onSelect={(place) => {
+            setAddress(place.addressLine);
+            if (place.city) setCity(place.city);
+            setCoords({
+              lat: place.lat.toFixed(6),
+              lng: place.lng.toFixed(6),
+            });
+            setPlaceId(place.placeId);
+          }}
+          required
+        />
+      </FieldShell>
+      <input type="hidden" name="googlePlaceId" value={placeId} />
       <InputField
         id="branch-city"
         name="city"
         label="Ciudad"
-        defaultValue={v.city ?? 'Bogotá'}
+        value={city}
+        onChange={(e) => setCity(e.target.value)}
         required
         error={state.fieldErrors?.city}
       />

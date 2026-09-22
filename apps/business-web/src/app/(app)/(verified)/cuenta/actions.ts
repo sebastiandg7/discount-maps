@@ -115,6 +115,7 @@ export async function addBranchAction(
     lat: text(formData, 'lat'),
     lng: text(formData, 'lng'),
     phone: text(formData, 'phone'),
+    googlePlaceId: text(formData, 'googlePlaceId'),
   };
   const parsed = branchSchema.safeParse({
     ...values,

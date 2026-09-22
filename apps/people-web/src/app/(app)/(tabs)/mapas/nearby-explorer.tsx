@@ -24,7 +24,13 @@ export function formatDistance(meters: number): string {
     : `${km.format(meters / 1000)} km`;
 }
 
-export function NearbyExplorer({ apiKey }: { apiKey: string | null }) {
+export function NearbyExplorer({
+  apiKey,
+  mapId,
+}: {
+  apiKey: string | null;
+  mapId: string | null;
+}) {
   const geo = useGeolocation();
   const [category, setCategory] = useState<BusinessCategory | null>(null);
   const [sort, setSort] = useState<NearbySort>('distance');
@@ -55,6 +61,7 @@ export function NearbyExplorer({ apiKey }: { apiKey: string | null }) {
       <BusinessMap
         center={geo.center}
         apiKey={apiKey}
+        mapId={mapId}
         markers={(rows ?? [])
           .filter((r) => r.lat != null && r.lng != null)
           .map((r) => ({
@@ -62,6 +69,8 @@ export function NearbyExplorer({ apiKey }: { apiKey: string | null }) {
             lat: r.lat,
             lng: r.lng,
             label: r.display_name,
+            description: `${r.branch_name} · ${formatDistance(r.distance_m)}`,
+            href: `/negocios/${r.business_id}`,
           }))}
       />
 

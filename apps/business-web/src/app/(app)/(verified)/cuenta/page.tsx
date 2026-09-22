@@ -78,7 +78,11 @@ export default async function AccountPage() {
             Agregar sede
           </summary>
           <div className="mt-4">
-            <AddBranchForm action={addBranchAction} count={branches.length} />
+            <AddBranchForm
+              action={addBranchAction}
+              count={branches.length}
+              mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || null}
+            />
           </div>
         </details>
       </section>

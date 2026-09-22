@@ -14,7 +14,7 @@
 - `BottomNav` takes `currentPath` and a `LinkComponent`; apps pass `usePathname()` and `next/link` from a small `'use client'` wrapper (`apps/people-web/src/app/(app)/(tabs)/bottom-nav.tsx`). Pages under a tab shell add `pb-20` to `PageShell` so the bar never covers content.
 - Add a `'use client'` directive only to components that use hooks or handlers.
 
-`@org/maps`: `useGeolocation` (one-shot, Bogotá fallback, `isFallback` + `locate()` for the "Usar mi ubicación" chip), `googleMapsDirectionsUrl` / `wazeUrl`, and `BusinessMap`, a placeholder until the Maps key exists. Read `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in a **server** component and pass it as `apiKey` (env inlining is not guaranteed inside transpiled packages).
+`@org/maps` (on `@vis.gl/react-google-maps`): `useGeolocation` (one-shot, Bogotá fallback, `isFallback` + `locate()` for the "Usar mi ubicación" chip), `googleMapsDirectionsUrl` / `wazeUrl`, `BusinessMap` (pins + info window + fitted viewport; placeholder without a key, classic markers without a Map ID) and `PlaceAutocompleteInput` (Places New; wrap it in `FieldShell` and style it with `fieldControlClassName`; `onSelect` fills address, city, lat/lng and `googlePlaceId`). Read `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` / `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` in a **server** component and pass them as props (env inlining is not guaranteed inside transpiled packages). Each component wraps its own `APIProvider`; never render two on one page.
 
 ## Payments (people-web only)
 
