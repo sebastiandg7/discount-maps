@@ -76,3 +76,9 @@ test-output
 # Supabase local
 supabase/.temp
 supabase/.branches
+
+# Vercel (project links are per machine)
+.vercel
+
+.vercel
+.env*

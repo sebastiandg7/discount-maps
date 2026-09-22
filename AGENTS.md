@@ -35,6 +35,7 @@ Slash commands in `.claude/skills/`: `/owner-request <text>` (full protocol for 
 | Acting on a request from the owner / a non-technical operator; deciding whether to ask       | [docs/agent-protocol.md](docs/agent-protocol.md), [docs/recipes.md](docs/recipes.md)                                                                            |
 | Explaining the product, the workflow or a PR to a non-technical person                       | [docs/owner-guide.md](docs/owner-guide.md) (Spanish; what they were told to expect)                                                                             |
 | Closing a unit of work (docs, gate, commit, PR)                                              | `/ship` skill, [docs/agent-protocol.md § 4](docs/agent-protocol.md), `.github/pull_request_template.md`                                                         |
+| Deploying, changing production env vars, Vault secrets, third-party URLs                     | [docs/deploy.md](docs/deploy.md)                                                                                                                                |
 
 ## Documents
 
@@ -50,4 +51,5 @@ Slash commands in `.claude/skills/`: `/owner-request <text>` (full protocol for 
 - [docs/agent-protocol.md](docs/agent-protocol.md) — risk tiers, when to ask, definition of done, reporting format, data safety
 - [docs/recipes.md](docs/recipes.md) — recurring owner requests mapped to files, steps, checks and docs
 - [docs/owner-guide.md](docs/owner-guide.md) — Spanish guide for the non-technical owner: how to ask, review, approve and undo
+- [docs/deploy.md](docs/deploy.md) — Vercel projects, env sync script, Supabase/Wompi/Google production settings, smoke test, pre-launch list
 - [supabase/README.md](supabase/README.md) — CLI runbook for the cloud project and the (optional) local stack
